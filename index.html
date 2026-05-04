@@ -71,7 +71,6 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 .bubble pre code{padding:0;background:transparent}
 .bubble p{margin:0 0 10px}
 .bubble ul,.bubble ol{padding-left:22px}
-
 @media(max-width:760px){
 .sidebar{position:fixed;left:-270px;top:0;bottom:0;z-index:20;transition:.25s}
 .sidebar.show{left:0}
@@ -100,7 +99,6 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
   <div class="main">
     <div class="header">
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-
       <div class="header-center">
         <span>Jerry AI</span>
         <select id="modelMode">
@@ -109,7 +107,6 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
           <option value="reasoner">🧠 深度思考</option>
         </select>
       </div>
-
       <button class="icon-btn" onclick="generateImage()">🎨</button>
     </div>
 
@@ -181,18 +178,8 @@ if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 renderChatList();
 renderMessages();
 
-input.addEventListener("input",()=>{
-  input.style.height="auto";
-  input.style.height=input.scrollHeight+"px";
-});
-
-input.addEventListener("keydown",e=>{
-  if(e.key==="Enter" && !e.shiftKey){
-    e.preventDefault();
-    sendMessage();
-  }
-});
-
+input.addEventListener("input",()=>{input.style.height="auto";input.style.height=input.scrollHeight+"px"});
+input.addEventListener("keydown",e=>{if(e.key==="Enter" && !e.shiftKey){e.preventDefault();sendMessage()}});
 imageInput.addEventListener("change",async()=>{
   const file=imageInput.files[0];
   if(!file)return;
@@ -207,13 +194,13 @@ function renderMarkdown(element,text){
   element.querySelectorAll("pre code").forEach(block=>hljs.highlightElement(block));
 }
 
-function typeWriter(element,text,speed=10){
+/* 稳定版打字机：先纯文本显示，结束后再渲染 Markdown，避免代码块黑框 */
+function typeWriter(element,text,speed=8){
   return new Promise(resolve=>{
-    let i=0, raw="";
-    element.innerHTML="";
+    let i=0;
+    element.textContent="";
     const timer=setInterval(()=>{
-      raw += text.charAt(i);
-      renderMarkdown(element,raw);
+      element.textContent += text.charAt(i);
       i++;
       chat.scrollTop=chat.scrollHeight;
       if(i>=text.length){
@@ -332,13 +319,9 @@ async function sendMessage(){
   const mode=document.getElementById("modelMode").value;
 
   let thinkingText="";
-  if(mode==="reasoner"){
-    thinkingText="🧠 深度思考中...";
-  }else if(mode==="auto"){
-    thinkingText="🤖 自动判断模型中...";
-  }else{
-    thinkingText="";
-  }
+  if(mode==="reasoner") thinkingText="🧠 深度思考中...";
+  else if(mode==="auto") thinkingText="🤖 自动判断模型中...";
+  else thinkingText="";
 
   const aiBubble=addMessageToPage("assistant",thinkingText);
 
@@ -415,6 +398,7 @@ function speakText(text,button=null){
     .replace(/🧠 深度思考中\.\.\./g,"")
     .replace(/🤖 自动判断模型中\.\.\./g,"")
     .replace(/⚡ 正在思考\.\.\./g,"")
+    .replace(/正在生成图片\.\.\./g,"")
     .trim();
 
   if(!clean)return;
