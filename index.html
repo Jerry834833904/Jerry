@@ -4,64 +4,268 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Jerry AI</title>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#212121;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial}
-.app{height:100vh;display:flex;overflow:hidden}
-.sidebar{width:260px;background:#171717;border-right:1px solid #333;padding:12px;display:flex;flex-direction:column}
-.brand{font-size:20px;font-weight:700;margin-bottom:12px}
-.new-chat{background:#2f2f2f;color:#fff;border:1px solid #444;border-radius:12px;padding:12px;cursor:pointer;margin-bottom:12px}
-.chat-list{flex:1;overflow-y:auto}
-.chat-item{padding:10px;border-radius:10px;color:#ddd;cursor:pointer;font-size:14px;margin-bottom:6px}
-.chat-item:hover,.chat-item.active{background:#2f2f2f}
-.main{flex:1;display:flex;flex-direction:column;height:100vh}
-.header{height:56px;border-bottom:1px solid #333;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
-.menu-btn{display:none;background:none;border:none;color:#fff;font-size:22px}
-.chat{flex:1;overflow-y:auto;padding:24px 16px 155px}
-.welcome{text-align:center;margin-top:17vh;color:#ddd}
-.welcome h1{font-size:34px}
-.message{max-width:850px;margin:22px auto;display:flex;gap:12px}
-.user{flex-direction:row-reverse}
-.avatar{width:34px;height:34px;border-radius:50%;background:#10a37f;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0}
-.user .avatar{background:#555}
-.content{max-width:80%}
-.bubble{white-space:pre-wrap;line-height:1.7;font-size:16px}
-.user .bubble{background:#2f2f2f;padding:12px 16px;border-radius:18px}
-.msg-img{max-width:280px;border-radius:14px;margin-top:10px;display:block}
-.actions{display:flex;gap:12px;margin-top:7px}
-.action-btn{background:none;border:none;color:#aaa;font-size:13px;cursor:pointer}
-.action-btn:hover{color:white}
-.input-area{position:fixed;left:260px;right:0;bottom:0;background:linear-gradient(transparent,#212121 25%);padding:36px 16px 18px}
-.preview{max-width:850px;margin:0 auto 10px;display:none;align-items:center;gap:10px;background:#2f2f2f;border:1px solid #444;border-radius:14px;padding:8px}
-.preview img{width:56px;height:56px;object-fit:cover;border-radius:10px}
-.preview button{margin-left:auto;background:#444;color:white;border:none;border-radius:8px;padding:6px 10px}
-.input-box{max-width:850px;margin:auto;background:#2f2f2f;border:1px solid #444;border-radius:28px;display:flex;align-items:flex-end;padding:9px}
-textarea{flex:1;resize:none;max-height:160px;min-height:28px;background:transparent;border:none;outline:none;color:white;font-size:16px;padding:8px}
-.icon-btn{width:38px;height:38px;border:none;border-radius:50%;margin:0 3px;background:#444;color:white;font-size:17px;cursor:pointer}
-.send-btn{background:white;color:#111}
-#imageInput{display:none}
-.note{text-align:center;font-size:12px;color:#777;margin-top:8px}
+body{
+  margin:0;
+  background:#ffffff;
+  color:#111;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;
+}
 
-/* 语音录音条 */
+.app{height:100vh;display:flex;overflow:hidden}
+
+.sidebar{
+  width:260px;
+  background:#f7f7f8;
+  border-right:1px solid #ddd;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+}
+
+.brand{font-size:20px;font-weight:700;margin-bottom:12px;color:#111}
+
+.new-chat{
+  background:#fff;
+  color:#111;
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:12px;
+  cursor:pointer;
+  margin-bottom:12px;
+}
+
+.chat-list{flex:1;overflow-y:auto}
+
+.chat-item{
+  padding:10px;
+  border-radius:10px;
+  color:#333;
+  cursor:pointer;
+  font-size:14px;
+  margin-bottom:6px;
+}
+
+.chat-item:hover,.chat-item.active{background:#ececf1}
+
+.main{flex:1;display:flex;flex-direction:column;height:100vh;background:#fff}
+
+.header{
+  height:56px;
+  border-bottom:1px solid #ddd;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 16px;
+  background:#fff;
+}
+
+.menu-btn{display:none;background:none;border:none;color:#111;font-size:22px}
+
+.header-center{display:flex;align-items:center;gap:10px;color:#111}
+
+select{
+  background:#fff;
+  color:#111;
+  border:1px solid #ddd;
+  border-radius:10px;
+  padding:7px 9px;
+}
+
+.chat{
+  flex:1;
+  overflow-y:auto;
+  padding:24px 16px 165px;
+  background:#fff;
+}
+
+.welcome{text-align:center;margin-top:17vh;color:#333}
+.welcome h1{font-size:34px;color:#111}
+
+.message{
+  max-width:850px;
+  margin:22px auto;
+  display:flex;
+  gap:12px;
+}
+
+.user{flex-direction:row-reverse}
+
+.avatar{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:#10a37f;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  flex-shrink:0;
+}
+
+.user .avatar{background:#555}
+
+.content{max-width:80%}
+
+.bubble{
+  white-space:normal;
+  line-height:1.7;
+  font-size:16px;
+  color:#111;
+}
+
+.user .bubble{
+  background:#f4f4f4;
+  padding:12px 16px;
+  border-radius:18px;
+  white-space:pre-wrap;
+}
+
+.msg-img{
+  max-width:280px;
+  border-radius:14px;
+  margin-top:10px;
+  display:block;
+}
+
+.actions{
+  display:flex;
+  gap:12px;
+  margin-top:7px;
+  flex-wrap:wrap;
+}
+
+.action-btn{
+  background:none;
+  border:none;
+  color:#666;
+  font-size:13px;
+  cursor:pointer;
+}
+
+.action-btn:hover{color:#111}
+
+.input-area{
+  position:fixed;
+  left:260px;
+  right:0;
+  bottom:0;
+  background:linear-gradient(transparent,#fff 25%);
+  padding:36px 16px 18px;
+}
+
+.preview{
+  max-width:850px;
+  margin:0 auto 10px;
+  display:none;
+  align-items:center;
+  gap:10px;
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:14px;
+  padding:8px;
+}
+
+.preview img{
+  width:56px;
+  height:56px;
+  object-fit:cover;
+  border-radius:10px;
+}
+
+.preview button{
+  margin-left:auto;
+  background:#f0f0f0;
+  color:#111;
+  border:none;
+  border-radius:8px;
+  padding:6px 10px;
+}
+
+.input-box{
+  max-width:850px;
+  margin:auto;
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:28px;
+  display:flex;
+  align-items:flex-end;
+  padding:9px;
+  box-shadow:0 2px 10px rgba(0,0,0,.06);
+}
+
+textarea{
+  flex:1;
+  resize:none;
+  max-height:160px;
+  min-height:28px;
+  background:transparent;
+  border:none;
+  outline:none;
+  color:#111;
+  font-size:16px;
+  padding:8px;
+}
+
+.icon-btn{
+  width:38px;
+  height:38px;
+  border:none;
+  border-radius:50%;
+  margin:0 3px;
+  background:#f0f0f0;
+  color:#111;
+  font-size:17px;
+  cursor:pointer;
+}
+
+.send-btn{
+  background:#111;
+  color:white;
+}
+
+#imageInput{display:none}
+
+.note{
+  text-align:center;
+  font-size:12px;
+  color:#777;
+  margin-top:8px;
+}
+
+.voice-settings{
+  display:none;
+}
+
 .voice-panel{
   max-width:850px;
   margin:auto;
-  background:#2f2f2f;
-  border:1px solid #444;
+  background:#fff;
+  border:1px solid #ddd;
   border-radius:28px;
   display:none;
   align-items:center;
   padding:9px 12px;
   gap:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.06);
 }
+
 .voice-text{
   flex:1;
-  color:#ddd;
+  color:#333;
   font-size:15px;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
+
 .wave{
   flex:1;
   height:28px;
@@ -69,12 +273,14 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;background:transpar
   align-items:center;
   gap:3px;
 }
+
 .wave span{
   width:3px;
-  background:#aaa;
+  background:#555;
   border-radius:3px;
   animation:wave 1s infinite ease-in-out;
 }
+
 .wave span:nth-child(1){height:8px;animation-delay:.1s}
 .wave span:nth-child(2){height:16px;animation-delay:.2s}
 .wave span:nth-child(3){height:24px;animation-delay:.3s}
@@ -83,10 +289,12 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;background:transpar
 .wave span:nth-child(6){height:10px;animation-delay:.6s}
 .wave span:nth-child(7){height:22px;animation-delay:.7s}
 .wave span:nth-child(8){height:12px;animation-delay:.8s}
+
 @keyframes wave{
   0%,100%{transform:scaleY(.6);opacity:.5}
   50%{transform:scaleY(1.3);opacity:1}
 }
+
 .voice-action{
   width:36px;
   height:36px;
@@ -95,15 +303,50 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;background:transpar
   font-size:18px;
   cursor:pointer;
 }
-.cancel-btn{background:#444;color:white}
-.ok-btn{background:white;color:#111}
+
+.cancel-btn{background:#f0f0f0;color:#111}
+.ok-btn{background:#111;color:white}
+
+.bubble pre{
+  background:#1e1e1e;
+  color:#fff;
+  padding:14px;
+  border-radius:12px;
+  overflow-x:auto;
+  font-size:14px;
+}
+
+.bubble code{
+  background:#1e1e1e;
+  color:#fff;
+  padding:2px 5px;
+  border-radius:5px;
+  font-family:monospace;
+}
+
+.bubble pre code{
+  padding:0;
+  background:transparent;
+}
+
+.bubble p{margin:0 0 10px}
+.bubble ul,.bubble ol{padding-left:22px}
 
 @media(max-width:760px){
-.sidebar{position:fixed;left:-270px;top:0;bottom:0;z-index:20;transition:.25s}
-.sidebar.show{left:0}
-.menu-btn{display:block}
-.input-area{left:0}
-.content{max-width:86%}
+  .sidebar{
+    position:fixed;
+    left:-270px;
+    top:0;
+    bottom:0;
+    z-index:20;
+    transition:.25s;
+  }
+
+  .sidebar.show{left:0}
+  .menu-btn{display:block}
+  .input-area{left:0}
+  .content{max-width:86%}
+  .header-center select{max-width:130px}
 }
 </style>
 </head>
@@ -119,18 +362,32 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;background:transpar
   <div class="main">
     <div class="header">
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-      <div>Jerry AI</div>
+
+      <div class="header-center">
+        <span>Jerry AI</span>
+        <select id="modelMode">
+          <option value="auto">🤖 自动模式</option>
+          <option value="fast">⚡ 普通模式</option>
+          <option value="reasoner">🧠 深度思考</option>
+        </select>
+      </div>
+
       <button class="icon-btn" onclick="generateImage()">🎨</button>
     </div>
 
     <div id="chat" class="chat">
       <div id="welcome" class="welcome">
         <h1>Jerry AI</h1>
-        <p>可以聊天、发图片、识别图片、生成图片</p>
+        <p>可以聊天、发图片、识别图片、语音输入、生成图片</p>
       </div>
     </div>
 
     <div class="input-area">
+      <div class="voice-settings">
+        <input id="voiceRate" type="range" min="0.7" max="1.3" step="0.05" value="0.95">
+        <input id="autoSpeak" type="checkbox">
+      </div>
+
       <div id="preview" class="preview">
         <img id="previewImg">
         <span id="previewName"></span>
@@ -155,7 +412,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;background:transpar
         <button class="icon-btn send-btn" onclick="sendMessage()">➤</button>
       </div>
 
-      <div class="note">有问题联系微信：Jeri926</div>
+      <div class="note">如有建议需要优化的地方请联系微信：Jeri926</div>
     </div>
   </div>
 </div>
@@ -181,9 +438,7 @@ let currentId = localStorage.getItem("jerry_current_id");
 let recognition = null;
 let voiceResult = "";
 
-if(!currentId || !conversations.find(c=>c.id===currentId)){
-  createConversation();
-}
+if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 
 renderChatList();
 renderMessages();
@@ -203,13 +458,44 @@ input.addEventListener("keydown",e=>{
 imageInput.addEventListener("change",async()=>{
   const file=imageInput.files[0];
   if(!file)return;
+
   selectedImageBase64=await compressImage(file);
   previewImg.src=selectedImageBase64;
   previewName.textContent=file.name;
   preview.style.display="flex";
 });
 
-function getCurrent(){return conversations.find(c=>c.id===currentId)}
+function renderMarkdown(element,text){
+  element.innerHTML = marked.parse(text || "");
+  element.querySelectorAll("pre code").forEach(block=>{
+    hljs.highlightElement(block);
+  });
+}
+
+function typeWriter(element,text,speed=10){
+  return new Promise(resolve=>{
+    let i=0;
+    let raw="";
+    element.innerHTML="";
+
+    const timer=setInterval(()=>{
+      raw += text.charAt(i);
+      renderMarkdown(element,raw);
+      i++;
+      chat.scrollTop=chat.scrollHeight;
+
+      if(i>=text.length){
+        clearInterval(timer);
+        renderMarkdown(element,text);
+        resolve();
+      }
+    },speed);
+  });
+}
+
+function getCurrent(){
+  return conversations.find(c=>c.id===currentId);
+}
 
 function saveAll(){
   localStorage.setItem("jerry_conversations",JSON.stringify(conversations));
@@ -218,7 +504,11 @@ function saveAll(){
 
 function createConversation(){
   const id=Date.now().toString();
-  conversations.unshift({id,title:"新聊天",messages:[]});
+  conversations.unshift({
+    id,
+    title:"新聊天",
+    messages:[]
+  });
   currentId=id;
   saveAll();
 }
@@ -250,13 +540,17 @@ function renderChatList(){
 function renderMessages(){
   chat.innerHTML="";
   const c=getCurrent();
+
   if(!c || c.messages.length===0){
     chat.appendChild(welcome);
     welcome.style.display="block";
     return;
   }
+
   welcome.style.display="none";
-  c.messages.forEach(m=>addMessageToPage(m.role,m.content,m.image));
+  c.messages.forEach(m=>{
+    addMessageToPage(m.role,m.content,m.image);
+  });
 }
 
 function addMessageToPage(role,text,image=null){
@@ -274,7 +568,12 @@ function addMessageToPage(role,text,image=null){
 
   const bubble=document.createElement("div");
   bubble.className="bubble";
-  bubble.textContent=text || "";
+
+  if(role==="assistant"){
+    renderMarkdown(bubble,text || "");
+  }else{
+    bubble.textContent=text || "";
+  }
 
   if(image){
     const img=document.createElement("img");
@@ -304,26 +603,7 @@ function addMessageToPage(role,text,image=null){
     const voice=document.createElement("button");
     voice.className="action-btn";
     voice.textContent="🔊 播放";
-    voice.onclick=()=>{
-      const currentText=(bubble.innerText || bubble.textContent || "").trim();
-      if(!currentText || currentText.includes("正在思考"))return;
-
-      if(speechSynthesis.speaking){
-        speechSynthesis.cancel();
-        voice.textContent="🔊 播放";
-        return;
-      }
-
-      speechSynthesis.cancel();
-      const u=new SpeechSynthesisUtterance(currentText);
-      u.lang="zh-CN";
-      u.rate=.95;
-      u.pitch=1;
-      u.onstart=()=>voice.textContent="⏹ 停止";
-      u.onend=()=>voice.textContent="🔊 播放";
-      u.onerror=()=>voice.textContent="🔊 播放";
-      speechSynthesis.speak(u);
-    };
+    voice.onclick=()=>speakText(bubble.innerText || bubble.textContent || "",voice);
     actions.appendChild(voice);
   }
 
@@ -333,15 +613,18 @@ function addMessageToPage(role,text,image=null){
   msg.appendChild(content);
   chat.appendChild(msg);
   chat.scrollTop=chat.scrollHeight;
+
   return bubble;
 }
 
 async function sendMessage(){
   const text=input.value.trim();
   const image=selectedImageBase64;
+
   if(!text && !image)return;
 
   const c=getCurrent();
+
   if(c.title==="新聊天"){
     c.title=text ? text.slice(0,18) : "图片识别";
   }
@@ -360,7 +643,14 @@ async function sendMessage(){
   saveAll();
   renderChatList();
 
-  const aiBubble=addMessageToPage("assistant","正在思考...");
+  const mode=document.getElementById("modelMode").value;
+
+  const thinkingText =
+    mode==="reasoner" ? "🧠 深度思考中..." :
+    mode==="auto" ? "🤖 自动判断模型中..." :
+    "⚡ 正在思考...";
+
+  const aiBubble=addMessageToPage("assistant",thinkingText);
 
   try{
     const payload=image ? {
@@ -369,11 +659,12 @@ async function sendMessage(){
       image:image
     } : {
       type:"text",
+      mode:mode,
       messages:c.messages
         .filter(m=>!m.image)
         .slice(-20)
         .map(m=>({
-          role:m.role==="assistant"?"assistant":"user",
+          role:m.role==="assistant" ? "assistant" : "user",
           content:m.content
         }))
     };
@@ -386,32 +677,52 @@ async function sendMessage(){
 
     const data=await res.json();
     const reply=data.reply || "没有收到回复";
-    aiBubble.textContent=reply;
+    const usedModel=data.usedModel ? "\n\n— 已使用：" + data.usedModel : "";
 
-    c.messages.push({role:"assistant",content:reply,image:null});
+    await typeWriter(aiBubble,reply + usedModel);
+
+    c.messages.push({
+      role:"assistant",
+      content:reply,
+      image:null
+    });
+
     saveAll();
 
+    if(document.getElementById("autoSpeak").checked){
+      speakText(reply);
+    }
+
   }catch(err){
-    aiBubble.textContent="连接失败，请检查 Worker 地址或后端部署。";
+    renderMarkdown(aiBubble,"连接失败，请检查 Worker 地址或后端部署。");
   }
 }
 
 async function generateImage(){
   const prompt=input.value.trim();
+
   if(!prompt){
-    alert("请先在输入框写图片描述，比如：生成一张赛博朋克城市夜景");
+    alert("请先写图片描述，比如：生成一张赛博朋克城市夜景");
     return;
   }
 
   const c=getCurrent();
-  if(c.title==="新聊天") c.title="图片生成";
+
+  if(c.title==="新聊天"){
+    c.title="图片生成";
+  }
 
   addMessageToPage("user","生成图片："+prompt);
-  c.messages.push({role:"user",content:"生成图片："+prompt,image:null});
-  saveAll();
+
+  c.messages.push({
+    role:"user",
+    content:"生成图片："+prompt,
+    image:null
+  });
 
   input.value="";
   input.style.height="auto";
+  saveAll();
 
   const aiBubble=addMessageToPage("assistant","正在生成图片...");
 
@@ -428,7 +739,7 @@ async function generateImage(){
     const data=await res.json();
 
     if(data.image){
-      aiBubble.textContent="图片生成完成：";
+      aiBubble.innerHTML="图片生成完成：";
       const img=document.createElement("img");
       img.src=data.image;
       img.className="msg-img";
@@ -439,14 +750,58 @@ async function generateImage(){
         content:"图片生成完成：",
         image:data.image
       });
+
       saveAll();
     }else{
-      aiBubble.textContent=data.reply || "图片生成失败";
+      await typeWriter(aiBubble,data.reply || "图片生成失败");
     }
 
   }catch(e){
-    aiBubble.textContent="图片生成失败，请检查后端 generate_image 接口。";
+    renderMarkdown(aiBubble,"图片生成失败，请检查后端 generate_image 接口。");
   }
+}
+
+function speakText(text,button=null){
+  const clean=(text || "").trim();
+
+  if(!clean || clean.includes("正在思考") || clean.includes("深度思考")){
+    return;
+  }
+
+  if(speechSynthesis.speaking){
+    speechSynthesis.cancel();
+    if(button)button.textContent="🔊 播放";
+    return;
+  }
+
+  const rate=Number(document.getElementById("voiceRate").value || 0.95);
+  const voices=speechSynthesis.getVoices();
+
+  const femaleVoice =
+    voices.find(v=>/Xiaoxiao|Tingting|Meijia|Sinji/i.test(v.name)) ||
+    voices.find(v=>v.lang && v.lang.includes("zh"));
+
+  const u=new SpeechSynthesisUtterance(clean);
+  u.voice=femaleVoice;
+  u.lang="zh-CN";
+  u.rate=rate;
+  u.pitch=1.05;
+  u.volume=1;
+
+  u.onstart=()=>{
+    if(button)button.textContent="⏹ 停止";
+  };
+
+  u.onend=()=>{
+    if(button)button.textContent="🔊 播放";
+  };
+
+  u.onerror=()=>{
+    if(button)button.textContent="🔊 播放";
+  };
+
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
 }
 
 function startVoice(){
@@ -473,6 +828,7 @@ function startVoice(){
 
     for(let i=e.resultIndex;i<e.results.length;i++){
       const transcript=e.results[i][0].transcript;
+
       if(e.results[i].isFinal){
         finalText+=transcript;
       }else{
@@ -481,20 +837,14 @@ function startVoice(){
     }
 
     if(finalText){
-      voiceResult += finalText;
+      voiceResult+=finalText;
     }
 
-    voiceText.textContent = voiceResult || interimText || "正在听你说话...";
+    voiceText.textContent=voiceResult || interimText || "正在听你说话...";
   };
 
   recognition.onerror=()=>{
     voiceText.textContent="识别失败，请重试";
-  };
-
-  recognition.onend=()=>{
-    if(voicePanel.style.display==="flex" && !voiceResult){
-      voiceText.textContent="没有识别到内容，可以再说一次";
-    }
   };
 
   recognition.start();
@@ -505,8 +855,8 @@ function cancelVoice(){
     recognition.stop();
     recognition=null;
   }
+
   voiceResult="";
-  voiceText.textContent="";
   voicePanel.style.display="none";
   inputBox.style.display="flex";
 }
@@ -524,7 +874,7 @@ function confirmVoice(){
 
   if(text && !text.includes("准备好了") && !text.includes("没有识别")){
     input.value=text;
-    input.focus();
+    sendMessage();
   }
 
   voiceResult="";
@@ -541,21 +891,34 @@ function clearImage(){
 function compressImage(file){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
+
     reader.onload=e=>{
       const img=new Image();
+
       img.onload=()=>{
         const canvas=document.createElement("canvas");
         const max=1024;
-        let w=img.width,h=img.height;
-        if(w>h && w>max){h=h*max/w;w=max}
-        else if(h>max){w=w*max/h;h=max}
+
+        let w=img.width;
+        let h=img.height;
+
+        if(w>h && w>max){
+          h=h*max/w;
+          w=max;
+        }else if(h>max){
+          w=w*max/h;
+          h=max;
+        }
+
         canvas.width=w;
         canvas.height=h;
         canvas.getContext("2d").drawImage(img,0,0,w,h);
         resolve(canvas.toDataURL("image/jpeg",.75));
       };
+
       img.src=e.target.result;
     };
+
     reader.onerror=reject;
     reader.readAsDataURL(file);
   });
@@ -572,8 +935,12 @@ function downloadImage(url){
 
 function toggleSidebar(force){
   const sidebar=document.getElementById("sidebar");
-  if(typeof force==="boolean") sidebar.classList.toggle("show",force);
-  else sidebar.classList.toggle("show");
+
+  if(typeof force==="boolean"){
+    sidebar.classList.toggle("show",force);
+  }else{
+    sidebar.classList.toggle("show");
+  }
 }
 </script>
 </body>
