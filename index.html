@@ -100,6 +100,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
   <div class="main">
     <div class="header">
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
       <div class="header-center">
         <span>Jerry AI</span>
         <select id="modelMode">
@@ -108,6 +109,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
           <option value="reasoner">🧠 深度思考</option>
         </select>
       </div>
+
       <button class="icon-btn" onclick="generateImage()">🎨</button>
     </div>
 
@@ -179,8 +181,18 @@ if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 renderChatList();
 renderMessages();
 
-input.addEventListener("input",()=>{input.style.height="auto";input.style.height=input.scrollHeight+"px"});
-input.addEventListener("keydown",e=>{if(e.key==="Enter" && !e.shiftKey){e.preventDefault();sendMessage()}});
+input.addEventListener("input",()=>{
+  input.style.height="auto";
+  input.style.height=input.scrollHeight+"px";
+});
+
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && !e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
 imageInput.addEventListener("change",async()=>{
   const file=imageInput.files[0];
   if(!file)return;
@@ -318,7 +330,16 @@ async function sendMessage(){
   renderChatList();
 
   const mode=document.getElementById("modelMode").value;
-  const thinkingText = mode==="reasoner" ? "🧠 深度思考中..." : mode==="auto" ? "🤖 自动判断模型中..." : "⚡ 正在思考...";
+
+  let thinkingText="";
+  if(mode==="reasoner"){
+    thinkingText="🧠 深度思考中...";
+  }else if(mode==="auto"){
+    thinkingText="🤖 自动判断模型中...";
+  }else{
+    thinkingText="";
+  }
+
   const aiBubble=addMessageToPage("assistant",thinkingText);
 
   try{
@@ -338,9 +359,8 @@ async function sendMessage(){
     const res=await fetch(WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
     const data=await res.json();
     const reply=data.reply || "没有收到回复";
-    const usedModel=data.usedModel ? "\n\n— 已使用：" + data.usedModel : "";
 
-    await typeWriter(aiBubble,reply + usedModel);
+    await typeWriter(aiBubble,reply);
 
     c.messages.push({role:"assistant",content:reply,image:null});
     saveAll();
@@ -388,8 +408,16 @@ async function generateImage(){
 }
 
 function speakText(text,button=null){
-  const clean=(text || "").trim();
-  if(!clean || clean.includes("正在思考") || clean.includes("深度思考"))return;
+  let clean=(text || "").trim();
+
+  clean = clean
+    .replace(/— 已使用：.*$/gm,"")
+    .replace(/🧠 深度思考中\.\.\./g,"")
+    .replace(/🤖 自动判断模型中\.\.\./g,"")
+    .replace(/⚡ 正在思考\.\.\./g,"")
+    .trim();
+
+  if(!clean)return;
 
   if(speechSynthesis.speaking){
     speechSynthesis.cancel();
@@ -399,11 +427,26 @@ function speakText(text,button=null){
 
   const rate=Number(document.getElementById("voiceRate").value || 0.95);
   const voices=speechSynthesis.getVoices();
-  const femaleVoice = voices.find(v=>/Xiaoxiao|Tingting|Meijia|Sinji/i.test(v.name)) || voices.find(v=>v.lang && v.lang.includes("zh"));
+
+  const isSpanish =
+    /[áéíóúñ¿¡]/i.test(clean) ||
+    /\b(hola|gracias|adiós|buenos|buenas|amigo|señor|señora|por favor|como estas|cómo estás)\b/i.test(clean);
+
+  let selectedVoice;
+
+  if(isSpanish){
+    selectedVoice =
+      voices.find(v=>v.lang && v.lang.startsWith("es")) ||
+      voices.find(v=>/Spanish|Español|Monica|Paulina/i.test(v.name));
+  }else{
+    selectedVoice =
+      voices.find(v=>/Xiaoxiao|Tingting|Meijia|Sinji/i.test(v.name)) ||
+      voices.find(v=>v.lang && v.lang.includes("zh"));
+  }
 
   const u=new SpeechSynthesisUtterance(clean);
-  u.voice=femaleVoice;
-  u.lang="zh-CN";
+  u.voice=selectedVoice;
+  u.lang=isSpanish ? "es-ES" : "zh-CN";
   u.rate=rate;
   u.pitch=1.05;
   u.volume=1;
