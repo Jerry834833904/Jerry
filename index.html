@@ -4,9 +4,9 @@
 
 <head>
 
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Jerry AI</title>
 
@@ -14,289 +14,65 @@
 
 *{box-sizing:border-box}
 
-body{
+body{margin:0;background:#212121;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial}
 
-  margin:0;
+.app{height:100vh;display:flex;flex-direction:column}
 
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+.header{height:56px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #333}
 
-  background:#212121;
+.logo{font-size:18px;font-weight:600}
 
-  color:#fff;
+.header button{background:#2f2f2f;color:#fff;border:1px solid #444;border-radius:18px;padding:8px 12px}
 
-}
+.chat{flex:1;overflow-y:auto;padding:18px 12px 130px}
 
-.app{
+.welcome{text-align:center;margin-top:18vh;color:#ddd}
 
-  height:100vh;
+.message{max-width:850px;margin:18px auto;display:flex;gap:10px}
 
-  display:flex;
+.user{flex-direction:row-reverse}
 
-  flex-direction:column;
+.avatar{width:32px;height:32px;border-radius:50%;background:#10a37f;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0}
 
-}
+.user .avatar{background:#555}
 
-.header{
+.content{max-width:78%}
 
-  height:56px;
+.bubble{line-height:1.6;white-space:pre-wrap;font-size:16px}
 
-  display:flex;
+.user .bubble{background:#2f2f2f;padding:12px 15px;border-radius:18px}
 
-  align-items:center;
+.ai .bubble{padding-top:4px}
 
-  justify-content:space-between;
+.msg-img{max-width:240px;border-radius:14px;margin-top:8px;display:block}
 
-  padding:0 16px;
+.copy-btn{margin-top:6px;font-size:12px;color:#aaa;background:none;border:none}
 
-  border-bottom:1px solid #333;
+.input-area{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(transparent,#212121 25%);padding:30px 12px 16px}
 
-  background:#212121;
+.input-box{max-width:850px;margin:auto;background:#2f2f2f;border:1px solid #444;border-radius:26px;display:flex;align-items:flex-end;padding:8px}
 
-}
+textarea{flex:1;resize:none;max-height:150px;min-height:26px;background:transparent;border:none;outline:none;color:white;font-size:16px;padding:8px}
 
-.logo{
+.icon{width:38px;height:38px;border-radius:50%;border:none;margin:0 3px;background:#444;color:white;font-size:17px}
 
-  font-size:18px;
+.send{background:white;color:#111}
 
-  font-weight:600;
+#imageInput{display:none}
 
-}
+.preview{max-width:850px;margin:0 auto 8px;display:none;align-items:center;gap:8px;color:#ccc;font-size:13px}
 
-.new-btn{
+.preview img{width:55px;height:55px;object-fit:cover;border-radius:10px}
 
-  background:#2f2f2f;
+.video-panel{position:fixed;inset:0;background:#111;display:none;z-index:10;flex-direction:column}
 
-  color:#fff;
+.video-top{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:#1f1f1f}
 
-  border:1px solid #444;
+video{flex:1;width:100%;object-fit:cover;background:#000}
 
-  border-radius:20px;
+.close-video{background:#ff4d4f;color:white;border:none;border-radius:18px;padding:8px 14px}
 
-  padding:8px 14px;
-
-}
-
-.chat{
-
-  flex:1;
-
-  overflow-y:auto;
-
-  padding:18px 14px 120px;
-
-}
-
-.welcome{
-
-  text-align:center;
-
-  margin-top:18vh;
-
-  color:#ddd;
-
-}
-
-.welcome h1{
-
-  font-size:30px;
-
-  margin-bottom:10px;
-
-}
-
-.message{
-
-  max-width:850px;
-
-  margin:18px auto;
-
-  display:flex;
-
-  gap:12px;
-
-}
-
-.avatar{
-
-  width:32px;
-
-  height:32px;
-
-  border-radius:50%;
-
-  background:#10a37f;
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:center;
-
-  font-weight:bold;
-
-  flex-shrink:0;
-
-}
-
-.user .avatar{
-
-  background:#555;
-
-}
-
-.bubble{
-
-  line-height:1.65;
-
-  white-space:pre-wrap;
-
-  font-size:16px;
-
-}
-
-.user{
-
-  flex-direction:row-reverse;
-
-}
-
-.user .bubble{
-
-  background:#2f2f2f;
-
-  padding:12px 15px;
-
-  border-radius:18px;
-
-}
-
-.ai .bubble{
-
-  padding-top:4px;
-
-}
-
-.input-area{
-
-  position:fixed;
-
-  bottom:0;
-
-  left:0;
-
-  right:0;
-
-  background:linear-gradient(transparent,#212121 25%);
-
-  padding:30px 12px 18px;
-
-}
-
-.input-box{
-
-  max-width:850px;
-
-  margin:auto;
-
-  background:#2f2f2f;
-
-  border:1px solid #444;
-
-  border-radius:26px;
-
-  display:flex;
-
-  align-items:flex-end;
-
-  padding:10px;
-
-}
-
-textarea{
-
-  flex:1;
-
-  resize:none;
-
-  max-height:160px;
-
-  min-height:24px;
-
-  background:transparent;
-
-  border:none;
-
-  outline:none;
-
-  color:#fff;
-
-  font-size:16px;
-
-  padding:8px;
-
-}
-
-button{
-
-  cursor:pointer;
-
-}
-
-.icon-btn{
-
-  width:38px;
-
-  height:38px;
-
-  border-radius:50%;
-
-  border:none;
-
-  background:#fff;
-
-  color:#111;
-
-  font-size:18px;
-
-}
-
-.mic-btn{
-
-  background:#444;
-
-  color:#fff;
-
-  margin-right:6px;
-
-}
-
-.typing{
-
-  color:#aaa;
-
-}
-
-.footer-note{
-
-  text-align:center;
-
-  font-size:12px;
-
-  color:#777;
-
-  margin-top:8px;
-
-}
-
-@media(max-width:600px){
-
-  .chat{padding:14px 12px 115px}
-
-  .message{margin:16px auto}
-
-  .bubble{font-size:15px}
-
-}
+.note{text-align:center;font-size:12px;color:#777;margin-top:7px}
 
 </style>
 
@@ -310,17 +86,22 @@ button{
 
     <div class="logo">Jerry AI</div>
 
-    <button class="new-btn" onclick="newChat()">新建聊天</button>
+    <div>
+
+      <button onclick="openVideo()">视频</button>
+
+      <button onclick="newChat()">新建</button>
+
+    </div>
 
   </div>
 
   <div id="chat" class="chat">
 
     <div id="welcome" class="welcome">
+<h1>Jerry AI</h1>
 
-      <h1>Jerry AI</h1>
-
-      <p>有什么可以帮你？</p>
+      <p>可以聊天、发图片、语音输入、复制回复</p>
 
     </div>
 
@@ -328,19 +109,47 @@ button{
 
   <div class="input-area">
 
-    <div class="input-box">
+    <div id="preview" class="preview">
 
-      <button class="icon-btn mic-btn" onclick="startVoice()">🎤</button>
+      <img id="previewImg">
 
-      <textarea id="input" placeholder="Message Jerry AI..." rows="1"></textarea>
+      <span id="previewName"></span>
 
-      <button class="icon-btn" onclick="sendMessage()">➤</button>
+      <button onclick="clearImage()">取消</button>
 
     </div>
 
-    <div class="footer-note">Jerry AI 可能会出错，请核对重要信息</div>
+    <div class="input-box">
+
+      <button class="icon" onclick="imageInput.click()">＋</button>
+
+      <input id="imageInput" type="file" accept="image/*">
+
+      <button class="icon" onclick="startVoice()">🎤</button>
+
+      <textarea id="input" placeholder="Message Jerry AI..." rows="1"></textarea>
+
+      <button class="icon send" onclick="sendMessage()">➤</button>
+
+    </div>
+
+    <div class="note">Jerry AI 有问题联系微信：Jeri926</div>
 
   </div>
+
+</div>
+
+<div id="videoPanel" class="video-panel">
+
+  <div class="video-top">
+
+    <div>Jerry AI 视频模式</div>
+
+    <button class="close-video" onclick="closeVideo()">关闭</button>
+
+  </div>
+
+  <video id="localVideo" autoplay playsinline muted></video>
 
 </div>
 
@@ -354,22 +163,35 @@ const input = document.getElementById("input");
 
 const welcome = document.getElementById("welcome");
 
+const imageInput = document.getElementById("imageInput");
+
+const preview = document.getElementById("preview");
+
+const previewImg = document.getElementById("previewImg");
+
+const previewName = document.getElementById("previewName");
+
+let selectedImageBase64 = null;
+
 let messages = JSON.parse(localStorage.getItem("jerry_ai_messages") || "[]");
+
+let videoStream = null;
 
 renderHistory();
 
-input.addEventListener("input", () => {
+input.addEventListener("input",()=>{
 
-  input.style.height = "auto";
+  input.style.height="auto";
 
-  input.style.height = input.scrollHeight + "px";
+  input.style.height=input.scrollHeight+"px";
 
 });
 
-input.addEventListener("keydown", e => {
+input.addEventListener("keydown",e=>{
 
-  if (e.key === "Enter" && !e.shiftKey) {
-e.preventDefault();
+  if(e.key==="Enter" && !e.shiftKey){
+
+    e.preventDefault();
 
     sendMessage();
 
@@ -377,65 +199,152 @@ e.preventDefault();
 
 });
 
+imageInput.addEventListener("change",async()=>{
+
+  const file=imageInput.files[0];
+
+  if(!file)return;
+
+  selectedImageBase64=await compressImage(file);
+
+  previewImg.src=selectedImageBase64;
+
+  previewName.textContent=file.name;
+
+  preview.style.display="flex";
+
+});
+
 function renderHistory(){
 
-  if(messages.length > 0) welcome.style.display = "none";
+  if(messages.length) welcome.style.display="none";
 
-  messages.forEach(m => addMessage(m.role, m.content, false));
+  messages.forEach(m=>addMessage(m.role,m.content,false,m.image || null));
 
 }
 
 function saveHistory(){
 
-  localStorage.setItem("jerry_ai_messages", JSON.stringify(messages));
+  localStorage.setItem("jerry_ai_messages",JSON.stringify(messages));
 
 }
 
 function newChat(){
-
-  messages = [];
+messages=[];
 
   localStorage.removeItem("jerry_ai_messages");
 
-  chat.innerHTML = "";
+  chat.innerHTML="";
 
   chat.appendChild(welcome);
 
-  welcome.style.display = "block";
+  welcome.style.display="block";
 
 }
 
-function addMessage(role, text, save=true){
+function addMessage(role,text,save=true,image=null){
 
-  welcome.style.display = "none";
+  welcome.style.display="none";
 
-  const msg = document.createElement("div");
+  const msg=document.createElement("div");
 
-  msg.className = "message " + (role === "user" ? "user" : "ai");
+  msg.className="message "+(role==="user"?"user":"ai");
 
-  const avatar = document.createElement("div");
+  const avatar=document.createElement("div");
 
-  avatar.className = "avatar";
+  avatar.className="avatar";
 
-  avatar.textContent = role === "user" ? "你" : "J";
+  avatar.textContent=role==="user"?"你":"J";
 
-  const bubble = document.createElement("div");
+  const content=document.createElement("div");
 
-  bubble.className = "bubble";
+  content.className="content";
 
-  bubble.textContent = text;
+  const bubble=document.createElement("div");
+
+  bubble.className="bubble";
+
+  bubble.textContent=text || "";
+
+  if(image){
+
+    const img=document.createElement("img");
+
+    img.src=image;
+
+    img.className="msg-img";
+
+    bubble.appendChild(img);
+
+  }
+
+  const actionRow=document.createElement("div");
+actionRow.className="action-row";
+
+const copy=document.createElement("button");
+copy.className="action-btn";
+copy.textContent="复制";
+copy.onclick=()=>navigator.clipboard.writeText(text || "");
+
+actionRow.appendChild(copy);
+
+if(role==="assistant"){
+  const voice=document.createElement("button");
+  voice.className="action-btn";
+  voice.textContent="🔊 播放";
+
+  voice.onclick = () => {
+
+  const currentText = (bubble.innerText || bubble.textContent || "").trim();
+
+  // ❗防止读“正在思考...”
+  if (!currentText || currentText.includes("正在思考")) return;
+
+  // 👉 如果正在播放 → 停止
+  if (speechSynthesis.speaking) {
+    speechSynthesis.cancel();
+    voice.textContent = "🔊 播放";
+    return;
+  }
+
+  // 👉 每次播放前先清空（防止叠加）
+  speechSynthesis.cancel();
+
+  const u = new SpeechSynthesisUtterance(currentText);
+  u.lang = "zh-CN";
+  u.rate = 1;
+
+  u.onstart = () => {
+    voice.textContent = "⏹ 停止";
+  };
+
+  u.onend = () => {
+    voice.textContent = "🔊 播放";
+  };
+
+  u.onerror = () => {
+    voice.textContent = "🔊 播放";
+  };
+
+  speechSynthesis.speak(u);
+};
+  actionRow.appendChild(voice);
+}
+
+content.appendChild(bubble);
+content.appendChild(actionRow);
 
   msg.appendChild(avatar);
 
-  msg.appendChild(bubble);
+  msg.appendChild(content);
 
   chat.appendChild(msg);
 
-  chat.scrollTop = chat.scrollHeight;
+  chat.scrollTop=chat.scrollHeight;
 
   if(save){
 
-    messages.push({role, content:text});
+    messages.push({role,content:text,image});
 
     saveHistory();
 
@@ -447,79 +356,194 @@ function addMessage(role, text, save=true){
 
 async function sendMessage(){
 
-  const text = input.value.trim();
+  const text=input.value.trim();
 
-  if(!text) return;
+  const image=selectedImageBase64;
 
-  addMessage("user", text);
+  if(!text && !image)return;
 
-  input.value = "";
+  addMessage("user",text || "帮我看看这张图片",true,image);
 
-  input.style.height = "auto";
+  input.value="";
 
-  const aiBubble = addMessage("assistant", "正在思考...", false);
+  input.style.height="auto";
 
-  aiBubble.classList.add("typing");
+  clearImage();
+
+  const aiBubble=addMessage("assistant","正在思考...",false);
 
   try{
 
-    const res = await fetch(WORKER_URL, {
+    const payload=image ? {
+type:"image",
+
+      message:text || "请描述这张图片，并回答我的问题。",
+
+      image:image
+
+    } : {
+
+      type:"text",
+
+      messages:messages.slice(-20)
+
+    };
+
+    const res=await fetch(WORKER_URL,{
 
       method:"POST",
 
       headers:{"Content-Type":"application/json"},
 
-      body:JSON.stringify({
-
-        messages: messages.slice(-20)
-
-      })
+      body:JSON.stringify(payload)
 
     });
 
-    const data = await res.json();
+    const data=await res.json();
 
-    aiBubble.classList.remove("typing");
+    aiBubble.textContent=data.reply || "没有收到回复";
 
-    aiBubble.textContent = data.reply || "没有收到回复";
-
-    messages.push({role:"assistant", content:aiBubble.textContent});
+    messages.push({role:"assistant",content:aiBubble.textContent});
 
     saveHistory();
 
-  }catch(err){
+  }catch(e){
 
-    aiBubble.textContent = "连接失败，请检查 Worker 地址或 API Key。";
+    aiBubble.textContent="连接失败，请检查 Worker 地址或 API Key。";
 
   }
 
 }
 
+function clearImage(){
+
+  selectedImageBase64=null;
+
+  imageInput.value="";
+
+  preview.style.display="none";
+
+  previewImg.src="";
+
+  previewName.textContent="";
+
+}
+
+function compressImage(file){
+
+  return new Promise((resolve,reject)=>{
+
+    const reader=new FileReader();
+
+    reader.onload=e=>{
+
+      const img=new Image();
+
+      img.onload=()=>{
+
+        const canvas=document.createElement("canvas");
+
+        const max=1024;
+
+        let w=img.width,h=img.height;
+
+        if(w>h && w>max){h=h*max/w;w=max}
+
+        else if(h>max){w=w*max/h;h=max}
+
+        canvas.width=w;canvas.height=h;
+
+        canvas.getContext("2d").drawImage(img,0,0,w,h);
+
+        resolve(canvas.toDataURL("image/jpeg",0.75));
+
+      };
+
+      img.src=e.target.result;
+
+    };
+
+    reader.onerror=reject;
+
+    reader.readAsDataURL(file);
+
+  });
+
+}
+
 function startVoice(){
 
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SpeechRecognition=window.SpeechRecognition || window.webkitSpeechRecognition;
 
   if(!SpeechRecognition){
 
-    alert("你的浏览器不支持语音输入，建议用 Chrome 或 Safari。");
+    alert("当前浏览器不支持语音输入，建议用 Chrome 或 Safari。");
 
     return;
 
   }
 
-  const recognition = new SpeechRecognition();
+  const rec=new SpeechRecognition();
 
-  recognition.lang = "zh-CN";
+  rec.lang="zh-CN";
 
-  recognition.start();
+  rec.start();
 
-  recognition.onresult = function(event){
+  rec.onresult=e=>{
 
-    input.value = event.results[0][0].transcript;
+    input.value=e.results[0][0].transcript;
 
     input.focus();
 
   };
+
+}
+
+function speak(text){
+
+  if(!window.speechSynthesis)return;
+
+  const u=new SpeechSynthesisUtterance(text);
+
+  u.lang="zh-CN";
+
+  u.rate=1;
+
+  speechSynthesis.cancel();
+
+  speechSynthesis.speak(u);
+
+}
+
+async function openVideo(){
+
+  document.getElementById("videoPanel").style.display="flex";
+
+  try{
+
+    videoStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+
+    document.getElementById("localVideo").srcObject=videoStream;
+
+  }catch(e){
+
+    alert("无法打开摄像头/麦克风，请检查权限。");
+
+  }
+
+}
+
+function closeVideo(){
+
+  document.getElementById("videoPanel").style.display="none";
+
+  if(videoStream){
+
+    videoStream.getTracks().forEach(t=>t.stop());
+
+    videoStream=null;
+
+  }
 
 }
 
