@@ -41,6 +41,63 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;background:transpar
 .send-btn{background:white;color:#111}
 #imageInput{display:none}
 .note{text-align:center;font-size:12px;color:#777;margin-top:8px}
+
+/* 语音录音条 */
+.voice-panel{
+  max-width:850px;
+  margin:auto;
+  background:#2f2f2f;
+  border:1px solid #444;
+  border-radius:28px;
+  display:none;
+  align-items:center;
+  padding:9px 12px;
+  gap:12px;
+}
+.voice-text{
+  flex:1;
+  color:#ddd;
+  font-size:15px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.wave{
+  flex:1;
+  height:28px;
+  display:flex;
+  align-items:center;
+  gap:3px;
+}
+.wave span{
+  width:3px;
+  background:#aaa;
+  border-radius:3px;
+  animation:wave 1s infinite ease-in-out;
+}
+.wave span:nth-child(1){height:8px;animation-delay:.1s}
+.wave span:nth-child(2){height:16px;animation-delay:.2s}
+.wave span:nth-child(3){height:24px;animation-delay:.3s}
+.wave span:nth-child(4){height:14px;animation-delay:.4s}
+.wave span:nth-child(5){height:20px;animation-delay:.5s}
+.wave span:nth-child(6){height:10px;animation-delay:.6s}
+.wave span:nth-child(7){height:22px;animation-delay:.7s}
+.wave span:nth-child(8){height:12px;animation-delay:.8s}
+@keyframes wave{
+  0%,100%{transform:scaleY(.6);opacity:.5}
+  50%{transform:scaleY(1.3);opacity:1}
+}
+.voice-action{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:none;
+  font-size:18px;
+  cursor:pointer;
+}
+.cancel-btn{background:#444;color:white}
+.ok-btn{background:white;color:#111}
+
 @media(max-width:760px){
 .sidebar{position:fixed;left:-270px;top:0;bottom:0;z-index:20;transition:.25s}
 .sidebar.show{left:0}
@@ -80,14 +137,25 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;background:transpar
         <button onclick="clearImage()">取消</button>
       </div>
 
-      <div class="input-box">
+      <div id="voicePanel" class="voice-panel">
+        <button class="voice-action cancel-btn" onclick="cancelVoice()">×</button>
+        <div class="wave">
+          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div id="voiceText" class="voice-text">准备好了，随时开始</div>
+        <button class="voice-action ok-btn" onclick="confirmVoice()">✓</button>
+      </div>
+
+      <div id="inputBox" class="input-box">
         <button class="icon-btn" onclick="imageInput.click()">＋</button>
         <input id="imageInput" type="file" accept="image/*">
         <button class="icon-btn" onclick="startVoice()">🎤</button>
         <textarea id="input" placeholder="Message Jerry AI..." rows="1"></textarea>
         <button class="icon-btn send-btn" onclick="sendMessage()">➤</button>
       </div>
-      <div class="note">有问题联系微信：Jeri926</div>
+
+      <div class="note">Jerry AI 可能会出错，请核对重要信息</div>
     </div>
   </div>
 </div>
@@ -103,10 +171,15 @@ const preview = document.getElementById("preview");
 const previewImg = document.getElementById("previewImg");
 const previewName = document.getElementById("previewName");
 const chatList = document.getElementById("chatList");
+const inputBox = document.getElementById("inputBox");
+const voicePanel = document.getElementById("voicePanel");
+const voiceText = document.getElementById("voiceText");
 
 let selectedImageBase64 = null;
 let conversations = JSON.parse(localStorage.getItem("jerry_conversations") || "[]");
 let currentId = localStorage.getItem("jerry_current_id");
+let recognition = null;
+let voiceResult = "";
 
 if(!currentId || !conversations.find(c=>c.id===currentId)){
   createConversation();
@@ -137,22 +210,26 @@ imageInput.addEventListener("change",async()=>{
 });
 
 function getCurrent(){return conversations.find(c=>c.id===currentId)}
+
 function saveAll(){
   localStorage.setItem("jerry_conversations",JSON.stringify(conversations));
   localStorage.setItem("jerry_current_id",currentId);
 }
+
 function createConversation(){
   const id=Date.now().toString();
   conversations.unshift({id,title:"新聊天",messages:[]});
   currentId=id;
   saveAll();
 }
+
 function newChat(){
   createConversation();
   renderChatList();
   renderMessages();
   toggleSidebar(false);
 }
+
 function renderChatList(){
   chatList.innerHTML="";
   conversations.forEach(c=>{
@@ -169,6 +246,7 @@ function renderChatList(){
     chatList.appendChild(div);
   });
 }
+
 function renderMessages(){
   chat.innerHTML="";
   const c=getCurrent();
@@ -178,8 +256,9 @@ function renderMessages(){
     return;
   }
   welcome.style.display="none";
-  c.messages.forEach(m=>addMessageToPage(m.role,m.content,m.image,false));
+  c.messages.forEach(m=>addMessageToPage(m.role,m.content,m.image));
 }
+
 function addMessageToPage(role,text,image=null){
   welcome.style.display="none";
 
@@ -228,11 +307,13 @@ function addMessageToPage(role,text,image=null){
     voice.onclick=()=>{
       const currentText=(bubble.innerText || bubble.textContent || "").trim();
       if(!currentText || currentText.includes("正在思考"))return;
+
       if(speechSynthesis.speaking){
         speechSynthesis.cancel();
         voice.textContent="🔊 播放";
         return;
       }
+
       speechSynthesis.cancel();
       const u=new SpeechSynthesisUtterance(currentText);
       u.lang="zh-CN";
@@ -368,6 +449,87 @@ async function generateImage(){
   }
 }
 
+function startVoice(){
+  const SpeechRecognition=window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if(!SpeechRecognition){
+    alert("当前浏览器不支持语音输入，建议用 Chrome 或 Safari。");
+    return;
+  }
+
+  voiceResult="";
+  voiceText.textContent="准备好了，随时开始";
+  inputBox.style.display="none";
+  voicePanel.style.display="flex";
+
+  recognition=new SpeechRecognition();
+  recognition.lang="zh-CN";
+  recognition.continuous=true;
+  recognition.interimResults=true;
+
+  recognition.onresult=e=>{
+    let finalText="";
+    let interimText="";
+
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const transcript=e.results[i][0].transcript;
+      if(e.results[i].isFinal){
+        finalText+=transcript;
+      }else{
+        interimText+=transcript;
+      }
+    }
+
+    if(finalText){
+      voiceResult += finalText;
+    }
+
+    voiceText.textContent = voiceResult || interimText || "正在听你说话...";
+  };
+
+  recognition.onerror=()=>{
+    voiceText.textContent="识别失败，请重试";
+  };
+
+  recognition.onend=()=>{
+    if(voicePanel.style.display==="flex" && !voiceResult){
+      voiceText.textContent="没有识别到内容，可以再说一次";
+    }
+  };
+
+  recognition.start();
+}
+
+function cancelVoice(){
+  if(recognition){
+    recognition.stop();
+    recognition=null;
+  }
+  voiceResult="";
+  voiceText.textContent="";
+  voicePanel.style.display="none";
+  inputBox.style.display="flex";
+}
+
+function confirmVoice(){
+  if(recognition){
+    recognition.stop();
+    recognition=null;
+  }
+
+  const text=(voiceResult || voiceText.textContent || "").trim();
+
+  voicePanel.style.display="none";
+  inputBox.style.display="flex";
+
+  if(text && !text.includes("准备好了") && !text.includes("没有识别")){
+    input.value=text;
+    input.focus();
+  }
+
+  voiceResult="";
+}
+
 function clearImage(){
   selectedImageBase64=null;
   imageInput.value="";
@@ -397,21 +559,6 @@ function compressImage(file){
     reader.onerror=reject;
     reader.readAsDataURL(file);
   });
-}
-
-function startVoice(){
-  const SpeechRecognition=window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SpeechRecognition){
-    alert("当前浏览器不支持语音输入，建议用 Chrome 或 Safari。");
-    return;
-  }
-  const rec=new SpeechRecognition();
-  rec.lang="zh-CN";
-  rec.start();
-  rec.onresult=e=>{
-    input.value=e.results[0][0].transcript;
-    input.focus();
-  };
 }
 
 function downloadImage(url){
