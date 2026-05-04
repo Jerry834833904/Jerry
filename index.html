@@ -6,304 +6,295 @@
 
 <meta charset="UTF-8" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>ChatGPT Mobile</title>
+<title>Jerry AI</title>
 
 <style>
 
-* {
+*{box-sizing:border-box}
 
-  box-sizing: border-box;
+body{
 
-}
+  margin:0;
 
-body {
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
 
-  margin: 0;
+  background:#212121;
 
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-
-  background: #212121;
-
-  color: #fff;
-
-  height: 100vh;
-
-  overflow: hidden;
+  color:#fff;
 
 }
 
-.app {
+.app{
 
-  height: 100vh;
+  height:100vh;
 
-  display: flex;
+  display:flex;
 
-  flex-direction: column;
-
-  background: #212121;
+  flex-direction:column;
 
 }
 
-.header {
+.header{
 
-  height: 52px;
+  height:56px;
 
-  padding: 0 16px;
+  display:flex;
 
-  border-bottom: 1px solid #333;
+  align-items:center;
 
-  display: flex;
+  justify-content:space-between;
 
-  align-items: center;
+  padding:0 16px;
 
-  justify-content: space-between;
+  border-bottom:1px solid #333;
 
-  background: #212121;
-
-}
-
-.header-title {
-
-  font-size: 17px;
-
-  font-weight: 600;
+  background:#212121;
 
 }
 
-.icon-btn {
+.logo{
 
-  width: 36px;
+  font-size:18px;
 
-  height: 36px;
-
-  border: none;
-
-  background: transparent;
-
-  color: #fff;
-
-  font-size: 22px;
-
-  border-radius: 50%;
+  font-weight:600;
 
 }
 
-.chat {
+.new-btn{
 
-  flex: 1;
+  background:#2f2f2f;
 
-  overflow-y: auto;
+  color:#fff;
 
-  padding: 18px 14px 120px;
+  border:1px solid #444;
 
-}
+  border-radius:20px;
 
-.message-row {
-
-  display: flex;
-
-  margin-bottom: 18px;
+  padding:8px 14px;
 
 }
 
-.message-row.user {
+.chat{
 
-  justify-content: flex-end;
+  flex:1;
 
-}
+  overflow-y:auto;
 
-.message-row.ai {
-
-  justify-content: flex-start;
+  padding:18px 14px 120px;
 
 }
 
-.bubble {
+.welcome{
 
-  max-width: 82%;
+  text-align:center;
 
-  padding: 12px 15px;
+  margin-top:18vh;
 
-  border-radius: 20px;
-
-  font-size: 15.5px;
-
-  line-height: 1.5;
-
-  white-space: pre-wrap;
-
-  word-break: break-word;
+  color:#ddd;
 
 }
 
-.user .bubble {
+.welcome h1{
 
-  background: #2f2f2f;
+  font-size:30px;
 
-  color: #fff;
-
-  border-bottom-right-radius: 6px;
+  margin-bottom:10px;
 
 }
 
-.ai .bubble {
+.message{
 
-  background: transparent;
+  max-width:850px;
 
-  color: #f1f1f1;
+  margin:18px auto;
 
-  padding-left: 4px;
-}
+  display:flex;
 
-.avatar {
-
-  width: 28px;
-
-  height: 28px;
-
-  background: #10a37f;
-
-  border-radius: 50%;
-
-  margin-right: 8px;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  font-size: 13px;
-
-  flex-shrink: 0;
+  gap:12px;
 
 }
 
-.input-area {
+.avatar{
 
-  position: fixed;
+  width:32px;
 
-  left: 0;
+  height:32px;
 
-  right: 0;
+  border-radius:50%;
 
-  bottom: 0;
+  background:#10a37f;
 
-  padding: 10px 12px 18px;
+  display:flex;
 
-  background: linear-gradient(to top, #212121 85%, transparent);
+  align-items:center;
 
-}
+  justify-content:center;
 
-.input-box {
+  font-weight:bold;
 
-  min-height: 52px;
-
-  background: #2f2f2f;
-
-  border: 1px solid #444;
-
-  border-radius: 28px;
-
-  display: flex;
-
-  align-items: flex-end;
-
-  padding: 7px;
-
-  gap: 6px;
+  flex-shrink:0;
 
 }
 
-textarea {
+.user .avatar{
 
-  flex: 1;
-
-  resize: none;
-
-  border: none;
-
-  outline: none;
-
-  background: transparent;
-
-  color: #fff;
-
-  font-size: 16px;
-
-  line-height: 22px;
-
-  max-height: 120px;
-
-  padding: 8px 4px;
-
-  font-family: inherit;
+  background:#555;
 
 }
 
-textarea::placeholder {
+.bubble{
 
-  color: #aaa;
+  line-height:1.65;
 
-}
+  white-space:pre-wrap;
 
-.round-btn {
-
-  width: 38px;
-
-  height: 38px;
-
-  border-radius: 50%;
-
-  border: none;
-
-  background: transparent;
-
-  color: #fff;
-
-  font-size: 20px;
-
-  flex-shrink: 0;
+  font-size:16px;
 
 }
 
-.send-btn {
+.user{
 
-  background: #fff;
-
-  color: #000;
-
-  font-size: 18px;
+  flex-direction:row-reverse;
 
 }
 
-.preview {
+.user .bubble{
 
-  max-width: 120px;
+  background:#2f2f2f;
 
-  border-radius: 12px;
+  padding:12px 15px;
 
-  margin: 6px 0 0 8px;
-
-  display: none;
+  border-radius:18px;
 
 }
 
-.hidden {
+.ai .bubble{
 
-  display: none;
+  padding-top:4px;
 
 }
 
-.typing {
+.input-area{
 
-  color: #aaa;
+  position:fixed;
 
-  font-size: 14px;
+  bottom:0;
 
-  margin-left: 38px;
+  left:0;
+
+  right:0;
+
+  background:linear-gradient(transparent,#212121 25%);
+
+  padding:30px 12px 18px;
+
+}
+
+.input-box{
+
+  max-width:850px;
+
+  margin:auto;
+
+  background:#2f2f2f;
+
+  border:1px solid #444;
+
+  border-radius:26px;
+
+  display:flex;
+
+  align-items:flex-end;
+
+  padding:10px;
+
+}
+
+textarea{
+
+  flex:1;
+
+  resize:none;
+
+  max-height:160px;
+
+  min-height:24px;
+
+  background:transparent;
+
+  border:none;
+
+  outline:none;
+
+  color:#fff;
+
+  font-size:16px;
+
+  padding:8px;
+
+}
+
+button{
+
+  cursor:pointer;
+
+}
+
+.icon-btn{
+
+  width:38px;
+
+  height:38px;
+
+  border-radius:50%;
+
+  border:none;
+
+  background:#fff;
+
+  color:#111;
+
+  font-size:18px;
+
+}
+
+.mic-btn{
+
+  background:#444;
+
+  color:#fff;
+
+  margin-right:6px;
+
+}
+
+.typing{
+
+  color:#aaa;
+
+}
+
+.footer-note{
+
+  text-align:center;
+
+  font-size:12px;
+
+  color:#777;
+
+  margin-top:8px;
+
+}
+
+@media(max-width:600px){
+
+  .chat{padding:14px 12px 115px}
+
+  .message{margin:16px auto}
+
+  .bubble{font-size:15px}
 
 }
 
@@ -317,20 +308,19 @@ textarea::placeholder {
 
   <div class="header">
 
-    <button class="icon-btn">☰</button>
+    <div class="logo">Jerry AI</div>
 
-    <div class="header-title">ChatGPT</div>
+    <button class="new-btn" onclick="newChat()">新建聊天</button>
 
-    <button class="icon-btn">＋</button>
-</div>
+  </div>
 
   <div id="chat" class="chat">
 
-    <div class="message-row ai">
+    <div id="welcome" class="welcome">
 
-      <div class="avatar">AI</div>
+      <h1>Jerry AI</h1>
 
-      <div class="bubble">你好，我是Jerry,我可以帮你什么？</div>
+      <p>有什么可以帮你？</p>
 
     </div>
 
@@ -338,21 +328,17 @@ textarea::placeholder {
 
   <div class="input-area">
 
-    <img id="preview" class="preview">
-
     <div class="input-box">
 
-      <button class="round-btn" onclick="chooseImage()">＋</button>
+      <button class="icon-btn mic-btn" onclick="startVoice()">🎤</button>
 
-      <textarea id="text" rows="1" placeholder="Message ChatGPT"></textarea>
+      <textarea id="input" placeholder="Message Jerry AI..." rows="1"></textarea>
 
-      <button class="round-btn" onclick="voice()">🎤</button>
-
-      <button class="round-btn send-btn" onclick="send()">↑</button>
-
-      <input id="imageInput" class="hidden" type="file" accept="image/*">
+      <button class="icon-btn" onclick="sendMessage()">➤</button>
 
     </div>
+
+    <div class="footer-note">Jerry AI 可能会出错，请核对重要信息</div>
 
   </div>
 
@@ -364,114 +350,128 @@ const WORKER_URL = "https://jerry123.834833904.workers.dev/";
 
 const chat = document.getElementById("chat");
 
-const textBox = document.getElementById("text");
+const input = document.getElementById("input");
 
-const imageInput = document.getElementById("imageInput");
+const welcome = document.getElementById("welcome");
 
-const preview = document.getElementById("preview");
+let messages = JSON.parse(localStorage.getItem("jerry_ai_messages") || "[]");
 
-let imageBase64 = null;
+renderHistory();
 
-function addMessage(content, type) {
+input.addEventListener("input", () => {
 
-  const row = document.createElement("div");
+  input.style.height = "auto";
 
-  row.className = "message-row " + type;
+  input.style.height = input.scrollHeight + "px";
 
-  if (type === "ai") {
+});
 
-    row.innerHTML = `
+input.addEventListener("keydown", e => {
 
-      <div class="avatar">AI</div>
+  if (e.key === "Enter" && !e.shiftKey) {
+e.preventDefault();
 
-      <div class="bubble">${escapeHtml(content)}</div>
-
-    `;
-
-  } else {
-
-    row.innerHTML = `
-
-      <div class="bubble">${escapeHtml(content)}</div>
-
-    `;
+    sendMessage();
 
   }
 
-  chat.appendChild(row);
+});
+
+function renderHistory(){
+
+  if(messages.length > 0) welcome.style.display = "none";
+
+  messages.forEach(m => addMessage(m.role, m.content, false));
+
+}
+
+function saveHistory(){
+
+  localStorage.setItem("jerry_ai_messages", JSON.stringify(messages));
+
+}
+
+function newChat(){
+
+  messages = [];
+
+  localStorage.removeItem("jerry_ai_messages");
+
+  chat.innerHTML = "";
+
+  chat.appendChild(welcome);
+
+  welcome.style.display = "block";
+
+}
+
+function addMessage(role, text, save=true){
+
+  welcome.style.display = "none";
+
+  const msg = document.createElement("div");
+
+  msg.className = "message " + (role === "user" ? "user" : "ai");
+
+  const avatar = document.createElement("div");
+
+  avatar.className = "avatar";
+
+  avatar.textContent = role === "user" ? "你" : "J";
+
+  const bubble = document.createElement("div");
+
+  bubble.className = "bubble";
+
+  bubble.textContent = text;
+
+  msg.appendChild(avatar);
+
+  msg.appendChild(bubble);
+
+  chat.appendChild(msg);
 
   chat.scrollTop = chat.scrollHeight;
 
-}
+  if(save){
 
-function addTyping() {
+    messages.push({role, content:text});
 
-  const div = document.createElement("div");
+    saveHistory();
 
-  div.id = "typing";
+  }
 
-  div.className = "typing";
-
-  div.innerText = "ChatGPT 正在思考...";
-
-  chat.appendChild(div);
-
-  chat.scrollTop = chat.scrollHeight;
+  return bubble;
 
 }
 
-function removeTyping() {
+async function sendMessage(){
 
-  const t = document.getElementById("typing");
+  const text = input.value.trim();
 
-  if (t) t.remove();
+  if(!text) return;
 
-}
+  addMessage("user", text);
 
-function escapeHtml(text) {
+  input.value = "";
 
-  return String(text)
+  input.style.height = "auto";
 
-    .replaceAll("&", "&amp;")
+  const aiBubble = addMessage("assistant", "正在思考...", false);
 
-    .replaceAll("<", "&lt;")
+  aiBubble.classList.add("typing");
 
-    .replaceAll(">", "&gt;");
-
-}
-
-async function send() {
-
-  const text = textBox.value.trim();
-
-  if (!text && !imageBase64) return;
-
-  if (text) addMessage(text, "user");
-
-  if (imageBase64) addMessage("📷 已发送图片", "user");
-
-  textBox.value = "";
-
-  preview.style.display = "none";
-addTyping();
-
-  try {
+  try{
 
     const res = await fetch(WORKER_URL, {
 
-      method: "POST",
+      method:"POST",
 
-      headers: {
+      headers:{"Content-Type":"application/json"},
 
-        "Content-Type": "application/json"
+      body:JSON.stringify({
 
-      },
-
-      body: JSON.stringify({
-
-        text,
-
-        image: imageBase64
+        messages: messages.slice(-20)
 
       })
 
@@ -479,87 +479,49 @@ addTyping();
 
     const data = await res.json();
 
-    removeTyping();
+    aiBubble.classList.remove("typing");
 
-    addMessage(data.reply || "没有返回内容", "ai");
+    aiBubble.textContent = data.reply || "没有收到回复";
 
-  } catch (err) {
+    messages.push({role:"assistant", content:aiBubble.textContent});
 
-    removeTyping();
+    saveHistory();
 
-    addMessage("请求失败，请检查 Worker 地址。", "ai");
+  }catch(err){
+
+    aiBubble.textContent = "连接失败，请检查 Worker 地址或 API Key。";
 
   }
 
-  imageBase64 = null;
-
 }
 
-function chooseImage() {
+function startVoice(){
 
-  imageInput.click();
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-}
+  if(!SpeechRecognition){
 
-imageInput.onchange = function () {
-
-  const file = this.files[0];
-
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = function () {
-
-    imageBase64 = reader.result;
-
-    preview.src = imageBase64;
-
-    preview.style.display = "block";
-
-  };
-
-  reader.readAsDataURL(file);
-
-};
-
-function voice() {
-
-  const SpeechRecognition =
-
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SpeechRecognition) {
-
-    alert("当前浏览器不支持语音识别，建议用 Chrome。");
+    alert("你的浏览器不支持语音输入，建议用 Chrome 或 Safari。");
 
     return;
 
   }
 
-  const rec = new SpeechRecognition();
+  const recognition = new SpeechRecognition();
 
-  rec.lang = "zh-CN";
+  recognition.lang = "zh-CN";
 
-  rec.interimResults = false;
+  recognition.start();
 
-  rec.onresult = function (e) {
+  recognition.onresult = function(event){
 
-    textBox.value = e.results[0][0].transcript;
+    input.value = event.results[0][0].transcript;
+
+    input.focus();
 
   };
 
-  rec.start();
-
 }
-
-textBox.addEventListener("input", function () {
-
-  this.style.height = "auto";
-
-  this.style.height = Math.min(this.scrollHeight, 120) + "px";
-
-});
 
 </script>
 
