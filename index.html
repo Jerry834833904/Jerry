@@ -17,8 +17,11 @@ html,body{margin:0;width:100%;overflow-x:hidden;background:#fff;color:#111;font-
 .brand{font-size:20px;font-weight:700;margin-bottom:12px;color:#111}
 .new-chat{background:#fff;color:#111;border:1px solid #ddd;border-radius:12px;padding:12px;cursor:pointer;margin-bottom:12px}
 .chat-list{flex:1;overflow-y:auto}
-.chat-item{padding:10px;border-radius:10px;color:#333;cursor:pointer;font-size:14px;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-item{padding:10px;border-radius:10px;color:#333;cursor:pointer;font-size:14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .chat-item:hover,.chat-item.active{background:#ececf1}
+.chat-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.delete-chat{border:none;background:transparent;color:#999;font-size:14px;cursor:pointer;padding:4px}
+.delete-chat:hover{color:#e11d48}
 .main{flex:1;display:flex;flex-direction:column;height:100vh;background:#fff;max-width:100vw;overflow-x:hidden}
 .header{height:56px;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#fff;flex-shrink:0}
 .menu-btn{display:none;background:none;border:none;color:#111;font-size:22px}
@@ -71,6 +74,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 .bubble pre code{padding:0;background:transparent}
 .bubble p{margin:0 0 10px}
 .bubble ul,.bubble ol{padding-left:22px}
+
 @media(max-width:760px){
 .sidebar{position:fixed;left:-270px;top:0;bottom:0;z-index:20;transition:.25s}
 .sidebar.show{left:0}
@@ -99,6 +103,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
   <div class="main">
     <div class="header">
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
       <div class="header-center">
         <span>Jerry AI</span>
         <select id="modelMode">
@@ -107,6 +112,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
           <option value="reasoner">🧠 深度思考</option>
         </select>
       </div>
+
       <button class="icon-btn" onclick="generateImage()">🎨</button>
     </div>
 
@@ -178,8 +184,18 @@ if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 renderChatList();
 renderMessages();
 
-input.addEventListener("input",()=>{input.style.height="auto";input.style.height=input.scrollHeight+"px"});
-input.addEventListener("keydown",e=>{if(e.key==="Enter" && !e.shiftKey){e.preventDefault();sendMessage()}});
+input.addEventListener("input",()=>{
+  input.style.height="auto";
+  input.style.height=input.scrollHeight+"px";
+});
+
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && !e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
 imageInput.addEventListener("change",async()=>{
   const file=imageInput.files[0];
   if(!file)return;
@@ -194,7 +210,6 @@ function renderMarkdown(element,text){
   element.querySelectorAll("pre code").forEach(block=>hljs.highlightElement(block));
 }
 
-/* 稳定版打字机：先纯文本显示，结束后再渲染 Markdown，避免代码块黑框 */
 function typeWriter(element,text,speed=8){
   return new Promise(resolve=>{
     let i=0;
@@ -213,17 +228,71 @@ function typeWriter(element,text,speed=8){
 }
 
 function getCurrent(){return conversations.find(c=>c.id===currentId)}
-function saveAll(){localStorage.setItem("jerry_conversations",JSON.stringify(conversations));localStorage.setItem("jerry_current_id",currentId)}
-function createConversation(){const id=Date.now().toString();conversations.unshift({id,title:"新聊天",messages:[]});currentId=id;saveAll()}
-function newChat(){createConversation();renderChatList();renderMessages();toggleSidebar(false)}
+
+function saveAll(){
+  localStorage.setItem("jerry_conversations",JSON.stringify(conversations));
+  localStorage.setItem("jerry_current_id",currentId);
+}
+
+function createConversation(){
+  const id=Date.now().toString();
+  conversations.unshift({id,title:"新聊天",messages:[]});
+  currentId=id;
+  saveAll();
+}
+
+function newChat(){
+  createConversation();
+  renderChatList();
+  renderMessages();
+  toggleSidebar(false);
+}
+
+function deleteConversation(id){
+  if(!confirm("确定删除这个聊天记录吗？")) return;
+
+  conversations = conversations.filter(c=>c.id !== id);
+
+  if(conversations.length === 0){
+    createConversation();
+  }else if(currentId === id){
+    currentId = conversations[0].id;
+  }
+
+  saveAll();
+  renderChatList();
+  renderMessages();
+}
 
 function renderChatList(){
   chatList.innerHTML="";
+
   conversations.forEach(c=>{
     const div=document.createElement("div");
     div.className="chat-item"+(c.id===currentId?" active":"");
-    div.textContent=c.title;
-    div.onclick=()=>{currentId=c.id;saveAll();renderChatList();renderMessages();toggleSidebar(false)};
+
+    const title=document.createElement("span");
+    title.className="chat-title";
+    title.textContent=c.title;
+    title.onclick=()=>{
+      currentId=c.id;
+      saveAll();
+      renderChatList();
+      renderMessages();
+      toggleSidebar(false);
+    };
+
+    const del=document.createElement("button");
+    del.className="delete-chat";
+    del.textContent="🗑️";
+    del.title="删除";
+    del.onclick=(e)=>{
+      e.stopPropagation();
+      deleteConversation(c.id);
+    };
+
+    div.appendChild(title);
+    div.appendChild(del);
     chatList.appendChild(div);
   });
 }
@@ -321,7 +390,6 @@ async function sendMessage(){
   let thinkingText="";
   if(mode==="reasoner") thinkingText="🧠 深度思考中...";
   else if(mode==="auto") thinkingText="🤖 自动判断模型中...";
-  else thinkingText="";
 
   const aiBubble=addMessageToPage("assistant",thinkingText);
 
@@ -339,7 +407,12 @@ async function sendMessage(){
       }))
     };
 
-    const res=await fetch(WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const res=await fetch(WORKER_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+
     const data=await res.json();
     const reply=data.reply || "没有收到回复";
 
@@ -356,7 +429,10 @@ async function sendMessage(){
 
 async function generateImage(){
   const prompt=input.value.trim();
-  if(!prompt){alert("请先写图片描述，比如：生成一张赛博朋克城市夜景");return}
+  if(!prompt){
+    alert("请先写图片描述，比如：生成一张赛博朋克城市夜景");
+    return;
+  }
 
   const c=getCurrent();
   if(c.title==="新聊天") c.title="图片生成";
@@ -371,7 +447,12 @@ async function generateImage(){
   const aiBubble=addMessageToPage("assistant","正在生成图片...");
 
   try{
-    const res=await fetch(WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"generate_image",prompt:prompt})});
+    const res=await fetch(WORKER_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({type:"generate_image",prompt:prompt})
+    });
+
     const data=await res.json();
 
     if(data.image){
@@ -380,7 +461,13 @@ async function generateImage(){
       img.src=data.image;
       img.className="msg-img";
       aiBubble.appendChild(img);
-      c.messages.push({role:"assistant",content:"图片生成完成：",image:data.image});
+
+      c.messages.push({
+        role:"assistant",
+        content:"图片生成完成：",
+        image:data.image
+      });
+
       saveAll();
     }else{
       await typeWriter(aiBubble,data.reply || "图片生成失败");
@@ -445,7 +532,10 @@ function speakText(text,button=null){
 
 function startVoice(){
   const SpeechRecognition=window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SpeechRecognition){alert("当前浏览器不支持语音输入，建议用 Chrome 或 Safari。");return}
+  if(!SpeechRecognition){
+    alert("当前浏览器不支持语音输入，建议用 Chrome 或 Safari。");
+    return;
+  }
 
   voiceResult="";
   voiceText.textContent="准备好了，随时开始";
@@ -464,23 +554,35 @@ function startVoice(){
       if(e.results[i].isFinal) finalText+=transcript;
       else interimText+=transcript;
     }
+
     if(finalText) voiceResult+=finalText;
     voiceText.textContent=voiceResult || interimText || "正在听你说话...";
   };
 
-  recognition.onerror=()=>{voiceText.textContent="识别失败，请重试"};
+  recognition.onerror=()=>{
+    voiceText.textContent="识别失败，请重试";
+  };
+
   recognition.start();
 }
 
 function cancelVoice(){
-  if(recognition){recognition.stop();recognition=null}
+  if(recognition){
+    recognition.stop();
+    recognition=null;
+  }
+
   voiceResult="";
   voicePanel.style.display="none";
   inputBox.style.display="flex";
 }
 
 function confirmVoice(){
-  if(recognition){recognition.stop();recognition=null}
+  if(recognition){
+    recognition.stop();
+    recognition=null;
+  }
+
   const text=(voiceResult || voiceText.textContent || "").trim();
   voicePanel.style.display="none";
   inputBox.style.display="flex";
@@ -489,6 +591,7 @@ function confirmVoice(){
     input.value=text;
     sendMessage();
   }
+
   voiceResult="";
 }
 
@@ -503,21 +606,34 @@ function clearImage(){
 function compressImage(file){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
+
     reader.onload=e=>{
       const img=new Image();
+
       img.onload=()=>{
         const canvas=document.createElement("canvas");
         const max=1024;
-        let w=img.width,h=img.height;
-        if(w>h && w>max){h=h*max/w;w=max}
-        else if(h>max){w=w*max/h;h=max}
+
+        let w=img.width;
+        let h=img.height;
+
+        if(w>h && w>max){
+          h=h*max/w;
+          w=max;
+        }else if(h>max){
+          w=w*max/h;
+          h=max;
+        }
+
         canvas.width=w;
         canvas.height=h;
         canvas.getContext("2d").drawImage(img,0,0,w,h);
         resolve(canvas.toDataURL("image/jpeg",.75));
       };
+
       img.src=e.target.result;
     };
+
     reader.onerror=reject;
     reader.readAsDataURL(file);
   });
