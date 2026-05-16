@@ -423,7 +423,7 @@ async function sendMessage(){
 
     if(document.getElementById("autoSpeak").checked) speakText(reply);
   }catch(err){
-    renderMarkdown(aiBubble,"连接失败，请检查 Worker 地址或后端部署。");
+    renderMarkdown(aiBubble,"连接失败，请检查后端地址。");
   }
 }
 
