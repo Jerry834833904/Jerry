@@ -12,6 +12,7 @@
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;overflow-x:hidden;background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial}
+button,select,textarea,input{font:inherit}
 .app{height:100vh;display:flex;overflow:hidden;max-width:100vw}
 .sidebar{width:260px;background:#f7f7f8;border-right:1px solid #ddd;padding:12px;display:flex;flex-direction:column}
 .brand{font-size:20px;font-weight:700;margin-bottom:12px;color:#111}
@@ -23,71 +24,85 @@ html,body{margin:0;width:100%;overflow-x:hidden;background:#fff;color:#111;font-
 .delete-chat{border:none;background:transparent;color:#999;font-size:14px;cursor:pointer;padding:4px}
 .delete-chat:hover{color:#e11d48}
 .main{flex:1;display:flex;flex-direction:column;height:100vh;background:#fff;max-width:100vw;overflow-x:hidden}
-.header{height:56px;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#fff;flex-shrink:0}
+.header{height:60px;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#fff;flex-shrink:0}
 .menu-btn{display:none;background:none;border:none;color:#111;font-size:22px}
-.header-center{display:flex;align-items:center;gap:10px;color:#111;min-width:0}
-.header-center span{font-size:20px;white-space:nowrap}
-select{background:#fff;color:#111;border:1px solid #ddd;border-radius:10px;padding:7px 9px}
-.chat{flex:1;overflow-y:auto;overflow-x:hidden;padding:24px 16px 165px;background:#fff;max-width:100vw}
-.welcome{text-align:center;margin-top:17vh;color:#333}
-.welcome h1{font-size:34px;color:#111}
-.message{width:100%;max-width:850px;margin:22px auto;display:flex;gap:12px}
-.user{flex-direction:row-reverse}
-.avatar{width:34px;height:34px;border-radius:50%;background:#10a37f;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0}
-.user .avatar{background:#555}
-.content{max-width:calc(100vw - 90px);overflow-wrap:break-word;word-break:break-word}
-.bubble{max-width:100%;white-space:normal;line-height:1.7;font-size:16px;color:#111;overflow-wrap:break-word;word-break:break-word}
+.header-center{display:flex;align-items:center;gap:8px;color:#111;min-width:0}
+.header-center .logo-text{font-size:20px;white-space:nowrap;font-weight:650}
+select{background:#fff;color:#111;border:1px solid #ddd;border-radius:10px;padding:7px 9px;max-width:230px}
+.header-spacer{width:38px}
+.chat{flex:1;overflow-y:auto;overflow-x:hidden;padding:24px 16px 225px;background:#fff;max-width:100vw}
+.welcome{text-align:center;margin-top:14vh;color:#333}
+.welcome h1{font-size:34px;color:#111;margin-bottom:10px}
+.welcome p{line-height:1.8}
+.mode-hints{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:20px}
+.mode-hint{border:1px solid #ddd;background:#fff;border-radius:999px;padding:8px 13px;cursor:pointer;color:#333}
+.mode-hint:hover{background:#f5f5f5}
+.message{width:100%;max-width:850px;margin:24px auto;display:flex}
+.ai{justify-content:center}
+.user{justify-content:flex-end}
+.content{max-width:min(720px,100%);overflow-wrap:break-word;word-break:break-word}
+.ai .content{width:min(720px,100%)}
+.user .content{max-width:min(78%,620px)}
+.bubble{max-width:100%;white-space:normal;line-height:1.75;font-size:16px;color:#111;overflow-wrap:break-word;word-break:break-word}
+.ai .bubble{padding:4px 2px}
 .user .bubble{background:#f4f4f4;padding:12px 16px;border-radius:18px;white-space:pre-wrap}
-.msg-img{max-width:min(280px,70vw);height:auto;border-radius:14px;margin-top:10px;display:block;object-fit:contain}
+.msg-img{max-width:min(520px,72vw);max-height:620px;height:auto;border-radius:14px;margin-top:10px;display:block;object-fit:contain;border:1px solid #eee;cursor:zoom-in}
+.msg-video{width:min(620px,75vw);max-height:620px;border-radius:14px;margin-top:10px;display:block;background:#000;border:1px solid #eee}
+.status-card{margin-top:10px;border:1px solid #ddd;background:#fafafa;border-radius:14px;padding:12px 14px;min-width:min(520px,70vw)}
+.status-line{display:flex;align-items:center;gap:9px;color:#444}
+.spinner{width:16px;height:16px;border:2px solid #ddd;border-top-color:#111;border-radius:50%;animation:spin .9s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
 .actions{display:flex;gap:12px;margin-top:7px;flex-wrap:wrap}
 .action-btn{background:none;border:none;color:#666;font-size:13px;cursor:pointer;padding:0}
 .action-btn:hover{color:#111}
-.input-area{position:fixed;left:260px;right:0;bottom:0;background:linear-gradient(transparent,#fff 25%);padding:36px 16px 18px;max-width:100vw;overflow-x:hidden}
+.input-area{position:fixed;left:260px;right:0;bottom:0;background:linear-gradient(transparent,#fff 17%);padding:30px 16px 18px;max-width:100vw;overflow-x:hidden}
+.mode-settings{max-width:850px;margin:0 auto 9px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff}
+.setting-group{display:none;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
+.setting-group.show{display:flex}
+.setting-label{font-size:12px;color:#777}
+.small-select{padding:6px 8px;font-size:13px;max-width:190px}
+.toggle-label{display:flex;align-items:center;gap:5px;font-size:13px;color:#555;border:1px solid #ddd;border-radius:10px;padding:6px 9px;background:#fff}
+.small-btn{border:1px solid #ddd;background:#fff;border-radius:10px;padding:6px 9px;font-size:13px;color:#444;cursor:pointer}
+.small-btn:hover{background:#f5f5f5}
+.reference-panel{max-width:850px;margin:0 auto 10px;display:none;background:#fff;border:1px solid #ddd;border-radius:14px;padding:11px}
+.reference-panel.show{display:block}
+.reference-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;font-size:13px;font-weight:650}
+.reference-tip{font-size:12px;color:#777;font-weight:400}
+.reference-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.reference-field label{display:block;font-size:12px;color:#666;margin:0 0 5px}
+.reference-field textarea{width:100%;min-height:62px;max-height:110px;border:1px solid #ddd;border-radius:10px;padding:8px;font-size:12px;resize:vertical;outline:none}
+.media-preview{max-width:850px;margin:0 auto 10px;display:none;gap:7px;flex-wrap:wrap;background:#fff;border:1px solid #ddd;border-radius:14px;padding:8px}
+.media-preview.show{display:flex}
+.media-chip{display:flex;align-items:center;gap:6px;max-width:260px;background:#f5f5f5;border:1px solid #e3e3e3;border-radius:999px;padding:6px 8px 6px 10px;font-size:12px}
+.media-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.media-chip button{border:none;background:transparent;color:#777;cursor:pointer;padding:0 2px;font-size:14px}
+.media-chip button:hover{color:#e11d48}
 .preview{max-width:850px;margin:0 auto 10px;display:none;align-items:center;gap:10px;background:#fff;border:1px solid #ddd;border-radius:14px;padding:8px}
 .preview img{width:56px;height:56px;object-fit:cover;border-radius:10px}
-.preview button{margin-left:auto;background:#f0f0f0;color:#111;border:none;border-radius:8px;padding:6px 10px}
+.preview .preview-info{min-width:0;flex:1}
+.preview .preview-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preview .preview-role{font-size:12px;color:#777;margin-top:3px}
+.preview button{margin-left:auto;background:#f0f0f0;color:#111;border:none;border-radius:8px;padding:6px 10px;cursor:pointer}
 .input-box{width:100%;max-width:850px;margin:auto;background:#fff;border:1px solid #ddd;border-radius:28px;display:flex;align-items:flex-end;padding:9px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
 textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;background:transparent;border:none;outline:none;color:#111;font-size:16px;padding:8px}
 .icon-btn{width:38px;height:38px;border:none;border-radius:50%;margin:0 3px;background:#f0f0f0;color:#111;font-size:17px;cursor:pointer;flex-shrink:0}
-.send-btn{background:#111;color:white}
-#imageInput{display:none}
+.icon-btn:disabled{opacity:.45;cursor:not-allowed}
+.send-btn{background:#111;color:#fff}
+#imageInput,#mediaInput{display:none}
 .note{text-align:center;font-size:12px;color:#777;margin-top:8px}
 .voice-settings{display:none}
 .voice-panel{max-width:850px;margin:auto;background:#fff;border:1px solid #ddd;border-radius:28px;display:none;align-items:center;padding:9px 12px;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
 .voice-text{flex:1;color:#333;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wave{flex:1;height:28px;display:flex;align-items:center;gap:3px}
 .wave span{width:3px;background:#555;border-radius:3px;animation:wave 1s infinite ease-in-out}
-.wave span:nth-child(1){height:8px;animation-delay:.1s}
-.wave span:nth-child(2){height:16px;animation-delay:.2s}
-.wave span:nth-child(3){height:24px;animation-delay:.3s}
-.wave span:nth-child(4){height:14px;animation-delay:.4s}
-.wave span:nth-child(5){height:20px;animation-delay:.5s}
-.wave span:nth-child(6){height:10px;animation-delay:.6s}
-.wave span:nth-child(7){height:22px;animation-delay:.7s}
-.wave span:nth-child(8){height:12px;animation-delay:.8s}
+.wave span:nth-child(1){height:8px;animation-delay:.1s}.wave span:nth-child(2){height:16px;animation-delay:.2s}.wave span:nth-child(3){height:24px;animation-delay:.3s}.wave span:nth-child(4){height:14px;animation-delay:.4s}.wave span:nth-child(5){height:20px;animation-delay:.5s}.wave span:nth-child(6){height:10px;animation-delay:.6s}.wave span:nth-child(7){height:22px;animation-delay:.7s}.wave span:nth-child(8){height:12px;animation-delay:.8s}
 @keyframes wave{0%,100%{transform:scaleY(.6);opacity:.5}50%{transform:scaleY(1.3);opacity:1}}
-.voice-action{width:36px;height:36px;border-radius:50%;border:none;font-size:18px;cursor:pointer;flex-shrink:0}
-.cancel-btn{background:#f0f0f0;color:#111}
-.ok-btn{background:#111;color:white}
-.bubble pre{background:#1e1e1e;color:#fff;padding:14px;border-radius:12px;overflow-x:auto;font-size:14px;max-width:100%}
-.bubble code{background:#1e1e1e;color:#fff;padding:2px 5px;border-radius:5px;font-family:monospace}
-.bubble pre code{padding:0;background:transparent}
-.bubble p{margin:0 0 10px}
-.bubble ul,.bubble ol{padding-left:22px}
+.voice-action{width:36px;height:36px;border-radius:50%;border:none;font-size:18px;cursor:pointer;flex-shrink:0}.cancel-btn{background:#f0f0f0;color:#111}.ok-btn{background:#111;color:#fff}
+.bubble pre{background:#1e1e1e;color:#fff;padding:14px;border-radius:12px;overflow-x:auto;font-size:14px;max-width:100%}.bubble code{background:#1e1e1e;color:#fff;padding:2px 5px;border-radius:5px;font-family:monospace}.bubble pre code{padding:0;background:transparent}.bubble p{margin:0 0 10px}.bubble ul,.bubble ol{padding-left:22px}
+.error-text{color:#b42318}
 
 @media(max-width:760px){
-.sidebar{position:fixed;left:-270px;top:0;bottom:0;z-index:20;transition:.25s}
-.sidebar.show{left:0}
-.menu-btn{display:block}
-.header{padding:0 10px}
-.header-center{gap:6px}
-.header-center span{font-size:18px}
-.header-center select{max-width:125px;font-size:13px;padding:6px}
-.chat{padding:16px 12px 150px}
-.message{max-width:100%;gap:8px}
-.content,.user .content{max-width:calc(100vw - 72px)}
-.input-area{left:0;padding:28px 12px 14px}
-.msg-img{max-width:68vw}
+.sidebar{position:fixed;left:-270px;top:0;bottom:0;z-index:20;transition:.25s}.sidebar.show{left:0}.menu-btn{display:block}.header{padding:0 10px}.header-center{gap:5px}.header-center .logo-text{display:none}.header-center select{max-width:128px;font-size:12px;padding:6px}.header-spacer{display:none}.chat{padding:16px 12px 245px}.message{max-width:100%}.content{max-width:100%}.ai .content{width:100%;padding:0 10px}.user .content{max-width:82%}.input-area{left:0;padding:26px 12px 14px}.msg-img{max-width:74vw}.msg-video{width:76vw}.status-card{min-width:70vw}.mode-settings{gap:5px}.small-select{font-size:12px;max-width:150px}.toggle-label{font-size:12px;padding:5px 7px}.reference-grid{grid-template-columns:1fr}.reference-panel{max-height:245px;overflow:auto}
 }
 </style>
 </head>
@@ -105,21 +120,27 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
 
       <div class="header-center">
-        <span>Jerry AI</span>
-        <select id="modelMode">
-          <option value="auto">🤖 自动模式</option>
-          <option value="fast">⚡ 普通模式</option>
-          <option value="reasoner">🧠 深度思考</option>
+        <span class="logo-text">Jerry AI</span>
+        <select id="taskMode" aria-label="功能模式">
+          <option value="chat">💬 AI 聊天</option>
+          <option value="image">🎨 豆包图片</option>
+          <option value="video">🎬 豆包视频</option>
         </select>
+        <select id="modelMode" aria-label="模型"></select>
       </div>
 
-      <button class="icon-btn" onclick="generateImage()">🎨</button>
+      <div class="header-spacer"></div>
     </div>
 
     <div id="chat" class="chat">
       <div id="welcome" class="welcome">
         <h1>Jerry AI</h1>
-        <p>可以聊天、发图片、识别图片、语音输入、生成图片</p>
+        <p id="welcomeText">可以聊天、发图片、识别图片、语音输入、生成图片和视频</p>
+        <div class="mode-hints">
+          <button class="mode-hint" onclick="setTaskMode('chat')">💬 聊天</button>
+          <button class="mode-hint" onclick="setTaskMode('image')">🎨 生成图片</button>
+          <button class="mode-hint" onclick="setTaskMode('video')">🎬 生成视频</button>
+        </div>
       </div>
     </div>
 
@@ -129,28 +150,96 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
         <input id="autoSpeak" type="checkbox">
       </div>
 
+      <div class="mode-settings">
+        <div id="imageSettings" class="setting-group">
+          <span class="setting-label">图片设置</span>
+          <select id="imageSize" class="small-select">
+            <option value="2K">自适应 2K</option>
+            <option value="1024x1024">1:1</option>
+            <option value="1424x800">16:9</option>
+            <option value="800x1424">9:16</option>
+            <option value="1152x864">4:3</option>
+            <option value="864x1152">3:4</option>
+          </select>
+          <label class="toggle-label"><input id="imageWatermark" type="checkbox"> 水印</label>
+        </div>
+
+        <div id="videoSettings" class="setting-group">
+          <span class="setting-label">视频设置</span>
+          <select id="videoResolution" class="small-select" title="视频质量">
+            <option value="480p">流畅 480P</option>
+            <option value="720p" selected>高清 720P</option>
+            <option value="1080p">全高清 1080P</option>
+            <option value="4k">超清 4K</option>
+          </select>
+          <select id="videoRatio" class="small-select">
+            <option value="16:9">16:9 横屏</option>
+            <option value="9:16">9:16 竖屏</option>
+            <option value="1:1">1:1 方形</option>
+            <option value="4:3">4:3</option>
+            <option value="3:4">3:4</option>
+            <option value="21:9">21:9 超宽屏</option>
+          </select>
+          <select id="videoDuration" class="small-select">
+            <option value="4">4 秒</option>
+            <option value="5">5 秒</option>
+            <option value="8">8 秒</option>
+            <option value="10">10 秒</option>
+            <option value="11">11 秒</option>
+            <option value="15">15 秒</option>
+          </select>
+          <label class="toggle-label"><input id="videoAudio" type="checkbox" checked> 生成音频</label>
+          <label class="toggle-label"><input id="videoWatermark" type="checkbox"> 水印</label>
+          <button type="button" class="small-btn" onclick="toggleReferencePanel()">🔗 素材 URL</button>
+        </div>
+      </div>
+
+      <div id="videoReferencePanel" class="reference-panel">
+        <div class="reference-title">
+          <span>Seedance 2.0 多模态参考素材</span>
+          <span class="reference-tip">每行一个公开 URL，按填写顺序对应图片1、视频1、音频1</span>
+        </div>
+        <div class="reference-grid">
+          <div class="reference-field">
+            <label for="videoImageUrls">参考图片 URL</label>
+            <textarea id="videoImageUrls" placeholder="https://.../image1.jpg&#10;https://.../image2.jpg"></textarea>
+          </div>
+          <div class="reference-field">
+            <label for="videoVideoUrls">参考视频 URL</label>
+            <textarea id="videoVideoUrls" placeholder="https://.../video1.mp4"></textarea>
+          </div>
+          <div class="reference-field">
+            <label for="videoAudioUrls">参考音频 URL</label>
+            <textarea id="videoAudioUrls" placeholder="https://.../audio1.mp3"></textarea>
+          </div>
+        </div>
+      </div>
+
       <div id="preview" class="preview">
-        <img id="previewImg">
-        <span id="previewName"></span>
+        <img id="previewImg" alt="参考图预览">
+        <div class="preview-info">
+          <div id="previewName" class="preview-name"></div>
+          <div id="previewRole" class="preview-role">用于图片理解</div>
+        </div>
         <button onclick="clearImage()">取消</button>
       </div>
 
+      <div id="mediaPreview" class="media-preview"></div>
+
       <div id="voicePanel" class="voice-panel">
         <button class="voice-action cancel-btn" onclick="cancelVoice()">×</button>
-        <div class="wave">
-          <span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span>
-        </div>
+        <div class="wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
         <div id="voiceText" class="voice-text">准备好了，随时开始</div>
         <button class="voice-action ok-btn" onclick="confirmVoice()">✓</button>
       </div>
 
       <div id="inputBox" class="input-box">
-        <button class="icon-btn" onclick="imageInput.click()">＋</button>
+        <button id="uploadButton" class="icon-btn" onclick="openUploadPicker()" title="上传图片">＋</button>
         <input id="imageInput" type="file" accept="image/*">
-        <button class="icon-btn" onclick="startVoice()">🎤</button>
+        <input id="mediaInput" type="file" accept="image/*,video/*,audio/*" multiple>
+        <button class="icon-btn" onclick="startVoice()" title="语音输入">🎤</button>
         <textarea id="input" placeholder="Message Jerry AI..." rows="1"></textarea>
-        <button class="icon-btn send-btn" onclick="sendMessage()">➤</button>
+        <button id="sendButton" class="icon-btn send-btn" onclick="handlePrimaryAction()">➤</button>
       </div>
 
       <div class="note">如有建议需要优化的地方请联系微信：Jeri926</div>
@@ -160,27 +249,64 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 
 <script>
 const WORKER_URL = "https://jerry123.834833904.workers.dev";
+const CHAT_WORKER_URL = WORKER_URL;
+const MEDIA_WORKER_URL = WORKER_URL;
+
+const MODEL_OPTIONS = {
+  chat: [
+    {value:"auto", label:"🤖 自动模式"},
+    {value:"fast", label:"⚡ 普通模式"},
+    {value:"reasoner", label:"🧠 深度思考"}
+  ],
+  image: [
+    {value:"seedream_5_pro", label:"Seedream 5.0 Pro"},
+    {value:"seedream_5_lite", label:"Seedream 5.0 Lite"},
+    {value:"seedream_40", label:"Seedream 4.0"}
+  ],
+  video: [
+    {value:"seedance_20", label:"Seedance 2.0"}
+  ]
+};
 
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 const welcome = document.getElementById("welcome");
+const welcomeText = document.getElementById("welcomeText");
 const imageInput = document.getElementById("imageInput");
+const mediaInput = document.getElementById("mediaInput");
+const mediaPreview = document.getElementById("mediaPreview");
+const videoReferencePanel = document.getElementById("videoReferencePanel");
+const videoImageUrls = document.getElementById("videoImageUrls");
+const videoVideoUrls = document.getElementById("videoVideoUrls");
+const videoAudioUrls = document.getElementById("videoAudioUrls");
+const uploadButton = document.getElementById("uploadButton");
 const preview = document.getElementById("preview");
 const previewImg = document.getElementById("previewImg");
 const previewName = document.getElementById("previewName");
+const previewRole = document.getElementById("previewRole");
 const chatList = document.getElementById("chatList");
 const inputBox = document.getElementById("inputBox");
 const voicePanel = document.getElementById("voicePanel");
 const voiceText = document.getElementById("voiceText");
+const taskMode = document.getElementById("taskMode");
+const modelMode = document.getElementById("modelMode");
+const imageSettings = document.getElementById("imageSettings");
+const videoSettings = document.getElementById("videoSettings");
+const sendButton = document.getElementById("sendButton");
 
 let selectedImageBase64 = null;
-let conversations = JSON.parse(localStorage.getItem("jerry_conversations") || "[]");
+let selectedImageName = "";
+let selectedVideoFiles = [];
+let conversations = safeParse(localStorage.getItem("jerry_conversations"), []);
 let currentId = localStorage.getItem("jerry_current_id");
 let recognition = null;
 let voiceResult = "";
+let isSubmitting = false;
+const activeVideoPolls = new Set();
 
 if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 
+updateModeUI();
 renderChatList();
 renderMessages();
 
@@ -192,21 +318,112 @@ input.addEventListener("input",()=>{
 input.addEventListener("keydown",e=>{
   if(e.key==="Enter" && !e.shiftKey){
     e.preventDefault();
-    sendMessage();
+    handlePrimaryAction();
   }
 });
+
+taskMode.addEventListener("change",updateModeUI);
 
 imageInput.addEventListener("change",async()=>{
   const file=imageInput.files[0];
   if(!file)return;
+
+  if(file.size > 12 * 1024 * 1024){
+    alert("图片太大，请选择 12MB 以内的图片。");
+    clearImage();
+    return;
+  }
+
   selectedImageBase64=await compressImage(file);
+  selectedImageName=file.name;
   previewImg.src=selectedImageBase64;
   previewName.textContent=file.name;
   preview.style.display="flex";
+  updatePreviewRole();
 });
 
+mediaInput.addEventListener("change",()=>{
+  const files=Array.from(mediaInput.files || []);
+  for(const file of files){
+    const type=getFileMediaType(file);
+    if(!type){
+      alert(`不支持的素材：${file.name}`);
+      continue;
+    }
+    if(file.size > 50 * 1024 * 1024){
+      alert(`${file.name} 超过 50MB，已跳过。`);
+      continue;
+    }
+    if(selectedVideoFiles.length >= 12)break;
+    selectedVideoFiles.push(file);
+  }
+  mediaInput.value="";
+  renderMediaPreview();
+});
+
+function safeParse(value,fallback){
+  try{return JSON.parse(value || "") || fallback}catch{return fallback}
+}
+
+function setTaskMode(mode){
+  taskMode.value=mode;
+  updateModeUI();
+  input.focus();
+}
+
+function openUploadPicker(){
+  if(taskMode.value==="video")mediaInput.click();
+  else imageInput.click();
+}
+
+function toggleReferencePanel(){
+  if(taskMode.value!=="video")return;
+  videoReferencePanel.classList.toggle("show");
+}
+
+function updateModeUI(){
+  const mode=taskMode.value;
+  const options=MODEL_OPTIONS[mode] || MODEL_OPTIONS.chat;
+  modelMode.innerHTML="";
+
+  options.forEach(item=>{
+    const option=document.createElement("option");
+    option.value=item.value;
+    option.textContent=item.label;
+    modelMode.appendChild(option);
+  });
+
+  imageSettings.classList.toggle("show",mode==="image");
+  videoSettings.classList.toggle("show",mode==="video");
+  preview.style.display=selectedImageBase64 && mode!=="video" ? "flex" : "none";
+  mediaPreview.classList.toggle("show",mode==="video" && selectedVideoFiles.length>0);
+  if(mode!=="video")videoReferencePanel.classList.remove("show");
+  sendButton.textContent=mode==="chat"?"➤":mode==="image"?"🎨":"🎬";
+  uploadButton.title=mode==="video"?"上传参考图片、视频或音频":"上传图片";
+
+  if(mode==="chat"){
+    input.placeholder="Message Jerry AI...";
+    welcomeText.textContent="可以聊天、发图片、识别图片和语音输入";
+  }else if(mode==="image"){
+    input.placeholder=selectedImageBase64 ? "描述你想怎样编辑这张参考图..." : "描述你想生成的图片...";
+    welcomeText.textContent="使用豆包 Seedream 文生图或参考图编辑";
+  }else{
+    input.placeholder=selectedVideoFiles.length ? "描述如何使用这些参考素材生成视频..." : "描述你想生成的视频镜头...";
+    welcomeText.textContent="使用豆包 Seedance 2.0，支持图片、视频、音频多模态参考";
+  }
+
+  updatePreviewRole();
+}
+
+function updatePreviewRole(){
+  const mode=taskMode.value;
+  if(mode==="chat") previewRole.textContent="用于图片理解";
+  if(mode==="image") previewRole.textContent="作为 Seedream 参考图/编辑原图";
+  if(mode==="video") previewRole.textContent="作为 Seedance 视频参考图";
+}
+
 function renderMarkdown(element,text){
-  element.innerHTML = marked.parse(text || "");
+  element.innerHTML=marked.parse(text || "");
   element.querySelectorAll("pre code").forEach(block=>hljs.highlightElement(block));
 }
 
@@ -215,7 +432,7 @@ function typeWriter(element,text,speed=8){
     let i=0;
     element.textContent="";
     const timer=setInterval(()=>{
-      element.textContent += text.charAt(i);
+      element.textContent+=text.charAt(i);
       i++;
       chat.scrollTop=chat.scrollHeight;
       if(i>=text.length){
@@ -230,8 +447,12 @@ function typeWriter(element,text,speed=8){
 function getCurrent(){return conversations.find(c=>c.id===currentId)}
 
 function saveAll(){
-  localStorage.setItem("jerry_conversations",JSON.stringify(conversations));
-  localStorage.setItem("jerry_current_id",currentId);
+  try{
+    localStorage.setItem("jerry_conversations",JSON.stringify(conversations));
+    localStorage.setItem("jerry_current_id",currentId);
+  }catch(err){
+    console.warn("本地记录保存失败，可能是图片数据超过浏览器容量：",err);
+  }
 }
 
 function createConversation(){
@@ -249,16 +470,10 @@ function newChat(){
 }
 
 function deleteConversation(id){
-  if(!confirm("确定删除这个聊天记录吗？")) return;
-
-  conversations = conversations.filter(c=>c.id !== id);
-
-  if(conversations.length === 0){
-    createConversation();
-  }else if(currentId === id){
-    currentId = conversations[0].id;
-  }
-
+  if(!confirm("确定删除这个聊天记录吗？"))return;
+  conversations=conversations.filter(c=>c.id!==id);
+  if(conversations.length===0)createConversation();
+  else if(currentId===id)currentId=conversations[0].id;
   saveAll();
   renderChatList();
   renderMessages();
@@ -266,7 +481,6 @@ function deleteConversation(id){
 
 function renderChatList(){
   chatList.innerHTML="";
-
   conversations.forEach(c=>{
     const div=document.createElement("div");
     div.className="chat-item"+(c.id===currentId?" active":"");
@@ -286,10 +500,7 @@ function renderChatList(){
     del.className="delete-chat";
     del.textContent="🗑️";
     del.title="删除";
-    del.onclick=(e)=>{
-      e.stopPropagation();
-      deleteConversation(c.id);
-    };
+    del.onclick=e=>{e.stopPropagation();deleteConversation(c.id)};
 
     div.appendChild(title);
     div.appendChild(del);
@@ -305,33 +516,43 @@ function renderMessages(){
     welcome.style.display="block";
     return;
   }
+
   welcome.style.display="none";
-  c.messages.forEach(m=>addMessageToPage(m.role,m.content,m.image));
+  c.messages.forEach((message,index)=>{
+    const rendered=addMessageToPage(message.role,message);
+    if(message.role==="assistant" && message.mediaType==="video" && message.taskId && !message.video && !["failed","cancelled","expired"].includes(message.status)){
+      pollVideoTask(message.taskId,rendered.bubble,c,index);
+    }
+  });
 }
 
-function addMessageToPage(role,text,image=null){
+function addMessageToPage(role,message={}){
   welcome.style.display="none";
   const msg=document.createElement("div");
   msg.className="message "+(role==="user"?"user":"ai");
-
-  const avatar=document.createElement("div");
-  avatar.className="avatar";
-  avatar.textContent=role==="user"?"你":"J";
 
   const content=document.createElement("div");
   content.className="content";
 
   const bubble=document.createElement("div");
   bubble.className="bubble";
+  if(role==="assistant")renderMarkdown(bubble,message.content || "");
+  else bubble.textContent=message.content || "";
 
-  if(role==="assistant") renderMarkdown(bubble,text || "");
-  else bubble.textContent=text || "";
-
-  if(image){
+  if(message.image){
     const img=document.createElement("img");
     img.className="msg-img";
-    img.src=image;
+    img.src=message.image;
+    img.alt="生成或上传的图片";
+    img.title="点击打开原图";
+    img.onclick=()=>openMedia(message.image,"jerry-ai-image.png");
     bubble.appendChild(img);
+  }
+
+  if(message.video){
+    appendVideo(bubble,message.video);
+  }else if(message.mediaType==="video" && message.taskId){
+    appendVideoStatus(bubble,message.status || "queued",message.statusText || "视频任务已提交，正在生成...");
   }
 
   const actions=document.createElement("div");
@@ -340,32 +561,92 @@ function addMessageToPage(role,text,image=null){
   const copy=document.createElement("button");
   copy.className="action-btn";
   copy.textContent="复制";
-  copy.onclick=()=>navigator.clipboard.writeText(bubble.innerText || "");
+  copy.onclick=()=>navigator.clipboard.writeText(message.content || bubble.innerText || "");
   actions.appendChild(copy);
 
-  if(image){
+  if(message.image){
+    const open=document.createElement("button");
+    open.className="action-btn";
+    open.textContent="打开原图";
+    open.onclick=()=>openMedia(message.image,"jerry-ai-image.png");
+    actions.appendChild(open);
+
     const down=document.createElement("button");
     down.className="action-btn";
-    down.textContent="下载图片";
-    down.onclick=()=>downloadImage(image);
+    down.textContent="保存图片";
+    down.onclick=()=>downloadFile(message.image,"jerry-ai-image.png");
     actions.appendChild(down);
   }
 
-  if(role==="assistant"){
+  if(message.video){
+    const downVideo=document.createElement("button");
+    downVideo.className="action-btn";
+    downVideo.textContent="下载视频";
+    downVideo.onclick=()=>downloadFile(message.video,"jerry-ai-video.mp4",true);
+    actions.appendChild(downVideo);
+  }
+
+  if(role==="assistant" && !message.image && !message.video){
     const voice=document.createElement("button");
     voice.className="action-btn";
     voice.textContent="🔊 播放";
-    voice.onclick=()=>speakText(bubble.innerText || bubble.textContent || "",voice);
+    voice.onclick=()=>speakText(message.content || bubble.innerText || "",voice);
     actions.appendChild(voice);
   }
 
   content.appendChild(bubble);
   content.appendChild(actions);
-  msg.appendChild(avatar);
   msg.appendChild(content);
   chat.appendChild(msg);
   chat.scrollTop=chat.scrollHeight;
-  return bubble;
+  return {bubble,actions,msg};
+}
+
+function appendVideo(bubble,url){
+  bubble.querySelectorAll(".status-card").forEach(el=>el.remove());
+  if(bubble.querySelector("video"))return;
+  const video=document.createElement("video");
+  video.className="msg-video";
+  video.src=url;
+  video.controls=true;
+  video.playsInline=true;
+  video.preload="metadata";
+  bubble.appendChild(video);
+}
+
+function appendVideoStatus(bubble,status,text){
+  bubble.querySelectorAll(".status-card").forEach(el=>el.remove());
+  const card=document.createElement("div");
+  card.className="status-card";
+  const line=document.createElement("div");
+  line.className="status-line";
+
+  if(!["failed","cancelled","expired","succeeded"].includes(status)){
+    const spinner=document.createElement("span");
+    spinner.className="spinner";
+    line.appendChild(spinner);
+  }
+
+  const span=document.createElement("span");
+  span.textContent=text;
+  if(["failed","cancelled","expired"].includes(status))span.className="error-text";
+  line.appendChild(span);
+  card.appendChild(line);
+  bubble.appendChild(card);
+}
+
+async function handlePrimaryAction(){
+  if(isSubmitting)return;
+  const mode=taskMode.value;
+  if(mode==="chat")return sendMessage();
+  if(mode==="image")return generateImage();
+  if(mode==="video")return generateVideo();
+}
+
+function setSubmitting(value){
+  isSubmitting=value;
+  sendButton.disabled=value;
+  uploadButton.disabled=value;
 }
 
 async function sendMessage(){
@@ -373,11 +654,13 @@ async function sendMessage(){
   const image=selectedImageBase64;
   if(!text && !image)return;
 
+  setSubmitting(true);
   const c=getCurrent();
-  if(c.title==="新聊天") c.title=text ? text.slice(0,18) : "图片识别";
+  if(c.title==="新聊天")c.title=text?text.slice(0,18):"图片识别";
 
-  c.messages.push({role:"user",content:text || "帮我看看这张图片",image:image || null});
-  addMessageToPage("user",text || "帮我看看这张图片",image);
+  const userMessage={role:"user",content:text || "帮我看看这张图片",image:image || null};
+  c.messages.push(userMessage);
+  addMessageToPage("user",userMessage);
 
   input.value="";
   input.style.height="auto";
@@ -385,109 +668,397 @@ async function sendMessage(){
   saveAll();
   renderChatList();
 
-  const mode=document.getElementById("modelMode").value;
+  const mode=modelMode.value;
+  let thinkingText="⚡ 正在思考...";
+  if(mode==="reasoner")thinkingText="🧠 深度思考中...";
+  else if(mode==="auto")thinkingText="🤖 自动判断模型中...";
 
-  let thinkingText="";
-  if(mode==="reasoner") thinkingText="🧠 深度思考中...";
-  else if(mode==="auto") thinkingText="🤖 自动判断模型中...";
-
-  const aiBubble=addMessageToPage("assistant",thinkingText);
+  const aiMessage={role:"assistant",content:thinkingText};
+  const {bubble:aiBubble}=addMessageToPage("assistant",aiMessage);
 
   try{
-    const payload=image ? {
+    const payload=image?{
       type:"image",
       message:text || "请描述这张图片，并回答我的问题。",
-      image:image
-    } : {
+      image
+    }:{
       type:"text",
-      mode:mode,
-      messages:c.messages.filter(m=>!m.image).slice(-20).map(m=>({
-        role:m.role==="assistant" ? "assistant" : "user",
+      mode,
+      messages:c.messages.filter(m=>!m.image && m.mediaType!=="video").slice(-20).map(m=>({
+        role:m.role==="assistant"?"assistant":"user",
         content:m.content
       }))
     };
 
-    const res=await fetch(WORKER_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)
-    });
-
-    const data=await res.json();
+    const data=await postJson(CHAT_WORKER_URL,payload);
     const reply=data.reply || "没有收到回复";
-
     await typeWriter(aiBubble,reply);
-
-    c.messages.push({role:"assistant",content:reply,image:null});
+    aiMessage.content=reply;
+    c.messages.push(aiMessage);
     saveAll();
 
-    if(document.getElementById("autoSpeak").checked) speakText(reply);
+    if(document.getElementById("autoSpeak").checked)speakText(reply);
   }catch(err){
-    renderMarkdown(aiBubble,"连接失败，请检查后端地址。");
+    renderMarkdown(aiBubble,"连接失败："+escapeMarkdown(err.message));
+  }finally{
+    setSubmitting(false);
   }
 }
 
 async function generateImage(){
   const prompt=input.value.trim();
+  const referenceImage=selectedImageBase64;
   if(!prompt){
-    alert("请先写图片描述，比如：生成一张赛博朋克城市夜景");
+    alert(referenceImage?"请描述要怎样编辑参考图。":"请先写图片描述。");
+    return;
+  }
+  if(!isMediaWorkerConfigured())return;
+
+  setSubmitting(true);
+  const c=getCurrent();
+  if(c.title==="新聊天")c.title="图片："+prompt.slice(0,14);
+
+  const userMessage={
+    role:"user",
+    content:(referenceImage?"参考图生成：":"生成图片：")+prompt,
+    image:referenceImage || null
+  };
+  c.messages.push(userMessage);
+  addMessageToPage("user",userMessage);
+
+  input.value="";
+  input.style.height="auto";
+  clearImage();
+  saveAll();
+  renderChatList();
+
+  const aiMessage={role:"assistant",content:"正在生成图片...",mediaType:"image"};
+  const {bubble}=addMessageToPage("assistant",aiMessage);
+
+  try{
+    const data=await postJson(MEDIA_WORKER_URL,{
+      type:"generate_image",
+      modelKey:modelMode.value,
+      prompt,
+      image:referenceImage || undefined,
+      size:document.getElementById("imageSize").value,
+      watermark:document.getElementById("imageWatermark").checked
+    });
+
+    if(!data.image)throw new Error(data.error || "接口没有返回图片地址");
+    bubble.innerHTML="图片生成完成：";
+    const img=document.createElement("img");
+    img.src=data.image;
+    img.className="msg-img";
+    img.alt="生成图片";
+    img.title="点击打开原图";
+    img.onclick=()=>openMedia(data.image,"jerry-ai-image.png");
+    bubble.appendChild(img);
+
+    aiMessage.content="图片生成完成：";
+    aiMessage.image=data.image;
+    c.messages.push(aiMessage);
+    saveAll();
+    renderMessages();
+  }catch(err){
+    aiMessage.content="图片生成失败："+err.message;
+    renderMarkdown(bubble,"**图片生成失败：** "+escapeMarkdown(err.message));
+    c.messages.push(aiMessage);
+    saveAll();
+  }finally{
+    setSubmitting(false);
+  }
+}
+
+async function generateVideo(){
+  const prompt=input.value.trim();
+  if(!prompt){
+    alert("请先写视频提示词。");
+    return;
+  }
+  if(!isMediaWorkerConfigured())return;
+
+  const localFiles=[...selectedVideoFiles];
+  let urlReferences=[];
+  try{
+    urlReferences=collectUrlReferences();
+  }catch(err){
+    alert(err.message);
+    return;
+  }
+  if(localFiles.length + urlReferences.length > 12){
+    alert("参考素材总数最多 12 个，请减少后再提交。");
     return;
   }
 
+  setSubmitting(true);
   const c=getCurrent();
-  if(c.title==="新聊天") c.title="图片生成";
+  if(c.title==="新聊天")c.title="视频："+prompt.slice(0,14);
 
-  addMessageToPage("user","生成图片："+prompt);
-  c.messages.push({role:"user",content:"生成图片："+prompt,image:null});
+  const counts=countReferences(localFiles,urlReferences);
+  const summary=[];
+  if(counts.image)summary.push(`${counts.image}张图片`);
+  if(counts.video)summary.push(`${counts.video}个视频`);
+  if(counts.audio)summary.push(`${counts.audio}个音频`);
+
+  const userMessage={
+    role:"user",
+    content:"生成视频："+prompt+(summary.length?`\n参考素材：${summary.join("、")}`:"")
+  };
+  c.messages.push(userMessage);
+  addMessageToPage("user",userMessage);
 
   input.value="";
   input.style.height="auto";
   saveAll();
+  renderChatList();
 
-  const aiBubble=addMessageToPage("assistant","正在生成图片...");
+  const aiMessage={
+    role:"assistant",
+    content:"视频任务正在创建...",
+    mediaType:"video",
+    status:"creating",
+    statusText:localFiles.length?"正在上传本地参考素材...":"正在创建视频任务..."
+  };
+  const aiIndex=c.messages.length;
+  c.messages.push(aiMessage);
+  const {bubble}=addMessageToPage("assistant",aiMessage);
+  appendVideoStatus(bubble,"creating",aiMessage.statusText);
+  saveAll();
 
   try{
-    const res=await fetch(WORKER_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({type:"generate_image",prompt:prompt})
+    const uploadedReferences=[];
+    for(let i=0;i<localFiles.length;i++){
+      aiMessage.statusText=`正在上传参考素材 ${i+1}/${localFiles.length}：${localFiles[i].name}`;
+      appendVideoStatus(bubble,"creating",aiMessage.statusText);
+      const uploaded=await uploadReferenceFile(localFiles[i]);
+      uploadedReferences.push({type:uploaded.type,url:uploaded.url});
+    }
+
+    const references=[...uploadedReferences,...urlReferences];
+    aiMessage.statusText="素材已准备完成，正在创建视频任务...";
+    appendVideoStatus(bubble,"creating",aiMessage.statusText);
+
+    const data=await postJson(MEDIA_WORKER_URL,{
+      type:"create_video",
+      modelKey:modelMode.value,
+      prompt,
+      references,
+      resolution:document.getElementById("videoResolution").value,
+      ratio:document.getElementById("videoRatio").value,
+      duration:Number(document.getElementById("videoDuration").value),
+      generateAudio:document.getElementById("videoAudio").checked,
+      watermark:document.getElementById("videoWatermark").checked
     });
 
-    const data=await res.json();
+    if(!data.taskId)throw new Error(data.error || "接口没有返回视频任务 ID");
+    aiMessage.taskId=data.taskId;
+    aiMessage.status=data.status || "queued";
+    aiMessage.content="视频任务已提交。";
+    aiMessage.statusText=`任务已提交，包含 ${data.referenceCount ?? references.length} 个参考素材，正在排队或生成中...`;
+    saveAll();
+    appendVideoStatus(bubble,aiMessage.status,aiMessage.statusText);
+    clearVideoReferences();
+    pollVideoTask(data.taskId,bubble,c,aiIndex);
+  }catch(err){
+    aiMessage.status="failed";
+    aiMessage.content="视频任务创建失败："+err.message;
+    aiMessage.statusText=aiMessage.content;
+    saveAll();
+    appendVideoStatus(bubble,"failed",aiMessage.content);
+  }finally{
+    setSubmitting(false);
+  }
+}
 
-    if(data.image){
-      aiBubble.innerHTML="图片生成完成：";
-      const img=document.createElement("img");
-      img.src=data.image;
-      img.className="msg-img";
-      aiBubble.appendChild(img);
+function collectUrlReferences(){
+  return [
+    ...parseReferenceUrls(videoImageUrls.value,"image"),
+    ...parseReferenceUrls(videoVideoUrls.value,"video"),
+    ...parseReferenceUrls(videoAudioUrls.value,"audio")
+  ];
+}
 
-      c.messages.push({
-        role:"assistant",
-        content:"图片生成完成：",
-        image:data.image
-      });
+function parseReferenceUrls(text,type){
+  return String(text || "").split(/\r?\n/).map(item=>item.trim()).filter(Boolean).map(url=>{
+    let parsed;
+    try{parsed=new URL(url)}catch{throw new Error(`无效的${referenceTypeLabel(type)} URL：${url}`)}
+    if(!["http:","https:"].includes(parsed.protocol))throw new Error(`${referenceTypeLabel(type)} URL 只支持 http 或 https`);
+    return {type,url};
+  });
+}
+
+function countReferences(files,references){
+  const count={image:0,video:0,audio:0};
+  references.forEach(item=>{if(count[item.type]!==undefined)count[item.type]++});
+  files.forEach(file=>{const type=getFileMediaType(file);if(type)count[type]++});
+  return count;
+}
+
+async function uploadReferenceFile(file){
+  const form=new FormData();
+  form.append("file",file,file.name);
+  const url=MEDIA_WORKER_URL.replace(/\/+$/,"")+"/upload";
+  const res=await fetch(url,{method:"POST",body:form});
+  let data={};
+  try{data=await res.json()}catch{throw new Error(`上传接口返回了非 JSON 内容，HTTP ${res.status}`)}
+  if(!res.ok || data.ok===false)throw new Error(data.error || `素材上传失败，HTTP ${res.status}`);
+  if(!data.url || !data.type)throw new Error("素材上传成功，但没有返回可用 URL");
+  return data;
+}
+
+async function pollVideoTask(taskId,bubble,conversation,messageIndex){
+  if(activeVideoPolls.has(taskId) || !taskId)return;
+  activeVideoPolls.add(taskId);
+
+  const maxAttempts=180;
+  let attempt=0;
+
+  try{
+    while(attempt<maxAttempts){
+      attempt++;
+      if(!document.body.contains(bubble))break;
+
+      const data=await postJson(MEDIA_WORKER_URL,{type:"video_status",taskId});
+      const status=(data.status || "unknown").toLowerCase();
+      const message=conversation.messages[messageIndex];
+      if(!message || message.taskId!==taskId)break;
+
+      message.status=status;
+      message.statusText=videoStatusText(status,data.error,attempt);
+
+      if(status==="succeeded" && data.video){
+        message.video=data.video;
+        message.content="视频生成完成：";
+        message.statusText="视频生成完成";
+        saveAll();
+        bubble.innerHTML="视频生成完成：";
+        appendVideo(bubble,data.video);
+        renderMessages();
+        break;
+      }
+
+      if(["failed","cancelled","expired"].includes(status)){
+        message.content="视频生成失败："+(data.error || status);
+        message.statusText=message.content;
+        saveAll();
+        appendVideoStatus(bubble,status,message.statusText);
+        break;
+      }
 
       saveAll();
-    }else{
-      await typeWriter(aiBubble,data.reply || "图片生成失败");
+      appendVideoStatus(bubble,status,message.statusText);
+      await sleep(5000);
     }
-  }catch(e){
-    renderMarkdown(aiBubble,"图片生成失败，请检查后端 generate_image 接口。");
+  }catch(err){
+    const message=conversation.messages[messageIndex];
+    if(message){
+      message.statusText="查询视频状态失败，稍后重新打开该聊天会继续查询："+err.message;
+      saveAll();
+      appendVideoStatus(bubble,"running",message.statusText);
+    }
+  }finally{
+    activeVideoPolls.delete(taskId);
   }
+}
+
+function videoStatusText(status,error,attempt){
+  if(status==="queued")return `视频正在排队（第 ${attempt} 次查询）...`;
+  if(status==="running")return `视频正在生成（第 ${attempt} 次查询）...`;
+  if(status==="succeeded")return "视频生成完成";
+  if(status==="failed")return "视频生成失败："+(error || "未知错误");
+  if(status==="cancelled")return "视频任务已取消";
+  if(status==="expired")return "视频任务已过期";
+  return `视频任务状态：${status}（第 ${attempt} 次查询）`;
+}
+
+async function postJson(url,payload){
+  const res=await fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload)
+  });
+
+  let data={};
+  try{data=await res.json()}catch{throw new Error(`服务器返回了非 JSON 内容，HTTP ${res.status}`)}
+  if(!res.ok || data.ok===false)throw new Error(data.error || data.message || `请求失败，HTTP ${res.status}`);
+  return data;
+}
+
+function isMediaWorkerConfigured(){
+  if(WORKER_URL.includes("你的统一worker")){
+    alert("请先部署统一 Worker，并在 HTML 顶部填写 WORKER_URL。\n\n注意：Ark API Key 只能放在 Worker 的环境变量中。");
+    return false;
+  }
+  return true;
+}
+
+function getFileMediaType(file){
+  const mime=String(file?.type || "").toLowerCase();
+  const name=String(file?.name || "").toLowerCase();
+  if(mime.startsWith("image/") || /\.(png|jpe?g|webp)$/i.test(name))return "image";
+  if(mime.startsWith("video/") || /\.(mp4|webm|mov)$/i.test(name))return "video";
+  if(mime.startsWith("audio/") || /\.(mp3|wav|m4a|aac)$/i.test(name))return "audio";
+  return null;
+}
+
+function referenceTypeLabel(type){
+  if(type==="image")return "图片";
+  if(type==="video")return "视频";
+  return "音频";
+}
+
+function referenceTypeIcon(type){
+  if(type==="image")return "🖼️";
+  if(type==="video")return "🎞️";
+  return "🎵";
+}
+
+function renderMediaPreview(){
+  mediaPreview.innerHTML="";
+  mediaPreview.classList.toggle("show",selectedVideoFiles.length>0);
+  selectedVideoFiles.forEach((file,index)=>{
+    const type=getFileMediaType(file);
+    const chip=document.createElement("div");
+    chip.className="media-chip";
+
+    const icon=document.createElement("span");
+    icon.textContent=referenceTypeIcon(type);
+
+    const name=document.createElement("span");
+    name.className="media-chip-name";
+    name.textContent=file.name;
+    name.title=file.name;
+
+    const remove=document.createElement("button");
+    remove.type="button";
+    remove.textContent="×";
+    remove.title="移除";
+    remove.onclick=()=>{
+      selectedVideoFiles.splice(index,1);
+      renderMediaPreview();
+      updateModeUI();
+    };
+
+    chip.append(icon,name,remove);
+    mediaPreview.appendChild(chip);
+  });
+  updateModeUI();
+}
+
+function clearVideoReferences(){
+  selectedVideoFiles=[];
+  mediaInput.value="";
+  videoImageUrls.value="";
+  videoVideoUrls.value="";
+  videoAudioUrls.value="";
+  videoReferencePanel.classList.remove("show");
+  renderMediaPreview();
 }
 
 function speakText(text,button=null){
   let clean=(text || "").trim();
-
-  clean = clean
-    .replace(/— 已使用：.*$/gm,"")
-    .replace(/🧠 深度思考中\.\.\./g,"")
-    .replace(/🤖 自动判断模型中\.\.\./g,"")
-    .replace(/⚡ 正在思考\.\.\./g,"")
-    .replace(/正在生成图片\.\.\./g,"")
-    .trim();
-
+  clean=clean.replace(/— 已使用：.*$/gm,"").replace(/🧠 深度思考中\.\.\./g,"").replace(/🤖 自动判断模型中\.\.\./g,"").replace(/⚡ 正在思考\.\.\./g,"").replace(/正在调用豆包.*$/gm,"").trim();
   if(!clean)return;
 
   if(speechSynthesis.speaking){
@@ -496,36 +1067,26 @@ function speakText(text,button=null){
     return;
   }
 
-  const rate=Number(document.getElementById("voiceRate").value || 0.95);
+  const rate=Number(document.getElementById("voiceRate").value || .95);
   const voices=speechSynthesis.getVoices();
-
-  const isSpanish =
-    /[áéíóúñ¿¡]/i.test(clean) ||
-    /\b(hola|gracias|adiós|buenos|buenas|amigo|señor|señora|por favor|como estas|cómo estás)\b/i.test(clean);
-
+  const isSpanish=/[áéíóúñ¿¡]/i.test(clean) || /\b(hola|gracias|adiós|buenos|buenas|amigo|señor|señora|por favor|como estas|cómo estás)\b/i.test(clean);
   let selectedVoice;
 
   if(isSpanish){
-    selectedVoice =
-      voices.find(v=>v.lang && v.lang.startsWith("es")) ||
-      voices.find(v=>/Spanish|Español|Monica|Paulina/i.test(v.name));
+    selectedVoice=voices.find(v=>v.lang && v.lang.startsWith("es")) || voices.find(v=>/Spanish|Español|Monica|Paulina/i.test(v.name));
   }else{
-    selectedVoice =
-      voices.find(v=>/Xiaoxiao|Tingting|Meijia|Sinji/i.test(v.name)) ||
-      voices.find(v=>v.lang && v.lang.includes("zh"));
+    selectedVoice=voices.find(v=>/Xiaoxiao|Tingting|Meijia|Sinji/i.test(v.name)) || voices.find(v=>v.lang && v.lang.includes("zh"));
   }
 
   const u=new SpeechSynthesisUtterance(clean);
   u.voice=selectedVoice;
-  u.lang=isSpanish ? "es-ES" : "zh-CN";
+  u.lang=isSpanish?"es-ES":"zh-CN";
   u.rate=rate;
   u.pitch=1.05;
   u.volume=1;
-
   u.onstart=()=>{if(button)button.textContent="⏹ 停止"};
   u.onend=()=>{if(button)button.textContent="🔊 播放"};
   u.onerror=()=>{if(button)button.textContent="🔊 播放"};
-
   speechSynthesis.cancel();
   speechSynthesis.speak(u);
 }
@@ -541,116 +1102,134 @@ function startVoice(){
   voiceText.textContent="准备好了，随时开始";
   inputBox.style.display="none";
   voicePanel.style.display="flex";
-
   recognition=new SpeechRecognition();
   recognition.lang="zh-CN";
   recognition.continuous=true;
   recognition.interimResults=true;
 
   recognition.onresult=e=>{
-    let finalText="", interimText="";
+    let finalText="",interimText="";
     for(let i=e.resultIndex;i<e.results.length;i++){
       const transcript=e.results[i][0].transcript;
-      if(e.results[i].isFinal) finalText+=transcript;
+      if(e.results[i].isFinal)finalText+=transcript;
       else interimText+=transcript;
     }
-
-    if(finalText) voiceResult+=finalText;
+    if(finalText)voiceResult+=finalText;
     voiceText.textContent=voiceResult || interimText || "正在听你说话...";
   };
 
-  recognition.onerror=()=>{
-    voiceText.textContent="识别失败，请重试";
-  };
-
+  recognition.onerror=()=>{voiceText.textContent="识别失败，请重试"};
   recognition.start();
 }
 
 function cancelVoice(){
-  if(recognition){
-    recognition.stop();
-    recognition=null;
-  }
-
+  if(recognition){recognition.stop();recognition=null}
   voiceResult="";
   voicePanel.style.display="none";
   inputBox.style.display="flex";
 }
 
 function confirmVoice(){
-  if(recognition){
-    recognition.stop();
-    recognition=null;
-  }
-
+  if(recognition){recognition.stop();recognition=null}
   const text=(voiceResult || voiceText.textContent || "").trim();
   voicePanel.style.display="none";
   inputBox.style.display="flex";
-
   if(text && !text.includes("准备好了") && !text.includes("没有识别")){
     input.value=text;
-    sendMessage();
+    handlePrimaryAction();
   }
-
   voiceResult="";
 }
 
 function clearImage(){
   selectedImageBase64=null;
+  selectedImageName="";
   imageInput.value="";
   preview.style.display="none";
   previewImg.src="";
   previewName.textContent="";
+  updateModeUI();
 }
 
 function compressImage(file){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
-
     reader.onload=e=>{
       const img=new Image();
-
       img.onload=()=>{
         const canvas=document.createElement("canvas");
-        const max=1024;
-
-        let w=img.width;
-        let h=img.height;
-
-        if(w>h && w>max){
-          h=h*max/w;
-          w=max;
-        }else if(h>max){
-          w=w*max/h;
-          h=max;
-        }
-
-        canvas.width=w;
-        canvas.height=h;
-        canvas.getContext("2d").drawImage(img,0,0,w,h);
-        resolve(canvas.toDataURL("image/jpeg",.75));
+        const max=1536;
+        let w=img.width,h=img.height;
+        if(w>h && w>max){h=h*max/w;w=max}
+        else if(h>max){w=w*max/h;h=max}
+        canvas.width=Math.round(w);
+        canvas.height=Math.round(h);
+        const ctx=canvas.getContext("2d");
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL("image/jpeg",.82));
       };
-
+      img.onerror=()=>reject(new Error("图片读取失败"));
       img.src=e.target.result;
     };
-
-    reader.onerror=reject;
+    reader.onerror=()=>reject(new Error("文件读取失败"));
     reader.readAsDataURL(file);
   });
 }
 
-function downloadImage(url){
-  const a=document.createElement("a");
+function mediaProxyUrl(url,filename,mode="attachment"){
+  return WORKER_URL.replace(/\/+$/,'')+
+    '/download?url='+encodeURIComponent(url)+
+    '&filename='+encodeURIComponent(filename)+
+    '&mode='+encodeURIComponent(mode);
+}
+
+function openMedia(url,filename){
+  const proxyUrl=mediaProxyUrl(url,filename,"inline");
+  const opened=window.open(proxyUrl,'_blank','noopener,noreferrer');
+  if(!opened)location.href=proxyUrl;
+}
+
+async function downloadFile(url,filename){
+  const proxyUrl=mediaProxyUrl(url,filename,"attachment");
+
+  try{
+    const response=await fetch(proxyUrl);
+    if(!response.ok)throw new Error('下载失败，HTTP '+response.status);
+    const blob=await response.blob();
+    const file=new File([blob],filename,{type:blob.type || 'application/octet-stream'});
+
+    // iPhone/iPad 优先调出系统分享面板，可选择“存储到文件”或保存视频/图片。
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:filename});
+      return;
+    }
+
+    const objectUrl=URL.createObjectURL(blob);
+    triggerDownload(objectUrl,filename);
+    setTimeout(()=>URL.revokeObjectURL(objectUrl),5000);
+  }catch(error){
+    // 用户取消系统分享不算错误。
+    if(error && error.name==='AbortError')return;
+    window.open(proxyUrl,'_blank','noopener,noreferrer');
+  }
+}
+
+function triggerDownload(url,filename){
+  const a=document.createElement('a');
   a.href=url;
-  a.download="jerry-ai-image.png";
+  a.download=filename;
+  a.rel='noopener';
   document.body.appendChild(a);
   a.click();
   a.remove();
 }
 
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+function escapeMarkdown(text){return String(text || "").replace(/[\\`*_{}\[\]()#+\-.!]/g,"\\$&")}
+
 function toggleSidebar(force){
   const sidebar=document.getElementById("sidebar");
-  if(typeof force==="boolean") sidebar.classList.toggle("show",force);
+  if(typeof force==="boolean")sidebar.classList.toggle("show",force);
   else sidebar.classList.toggle("show");
 }
 </script>
