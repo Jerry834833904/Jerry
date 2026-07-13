@@ -121,12 +121,13 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 
       <div class="header-center">
         <span class="logo-text">Jerry AI</span>
-        <select id="taskMode" aria-label="功能模式">
-          <option value="chat">💬 AI 聊天</option>
-          <option value="image">🎨 豆包图片</option>
-          <option value="video">🎬 豆包视频</option>
+        <span class="smart-mode">GPT6.0</span>
+        <select id="taskMode" aria-label="功能模式" hidden>
+          <option value="chat">AI 聊天</option>
+          <option value="image">图片生成</option>
+          <option value="video">视频生成</option>
         </select>
-        <select id="modelMode" aria-label="模型"></select>
+        <select id="modelMode" aria-label="模型" hidden></select>
       </div>
 
       <div class="header-spacer"></div>
@@ -137,9 +138,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
         <h1>Jerry AI</h1>
         <p id="welcomeText">可以聊天、发图片、识别图片、语音输入、生成图片和视频</p>
         <div class="mode-hints">
-          <button class="mode-hint" onclick="setTaskMode('chat')">💬 聊天</button>
-          <button class="mode-hint" onclick="setTaskMode('image')">🎨 生成图片</button>
-          <button class="mode-hint" onclick="setTaskMode('video')">🎬 生成视频</button>
+          <span class="mode-hint">直接输入文字，或上传图片、视频，Jerry AI 会自动选择功能</span>
         </div>
       </div>
     </div>
@@ -313,6 +312,7 @@ renderMessages();
 input.addEventListener("input",()=>{
   input.style.height="auto";
   input.style.height=input.scrollHeight+"px";
+  previewAutoIntent();
 });
 
 input.addEventListener("keydown",e=>{
@@ -342,7 +342,7 @@ imageInput.addEventListener("change",async()=>{
   updatePreviewRole();
 });
 
-mediaInput.addEventListener("change",()=>{
+mediaInput.addEventListener("change",async()=>{
   const files=Array.from(mediaInput.files || []);
   for(const file of files){
     const type=getFileMediaType(file);
@@ -356,9 +356,18 @@ mediaInput.addEventListener("change",()=>{
     }
     if(selectedVideoFiles.length >= 12)break;
     selectedVideoFiles.push(file);
+
+    // 第一张图片同时用于聊天识图或图片编辑。
+    if(type==="image" && !selectedImageBase64){
+      selectedImageBase64=await compressImage(file);
+      selectedImageName=file.name;
+      previewImg.src=selectedImageBase64;
+      previewName.textContent=file.name;
+    }
   }
   mediaInput.value="";
   renderMediaPreview();
+  previewAutoIntent();
 });
 
 function safeParse(value,fallback){
@@ -372,20 +381,58 @@ function setTaskMode(mode){
 }
 
 function openUploadPicker(){
-  if(taskMode.value==="video")mediaInput.click();
-  else imageInput.click();
+  mediaInput.click();
 }
 
 function toggleReferencePanel(){
-  if(taskMode.value!=="video")return;
+  taskMode.value="video";
+  updateModeUI();
   videoReferencePanel.classList.toggle("show");
+}
+
+function detectAutoIntent(text=input.value.trim()){
+  const value=String(text || "").toLowerCase();
+  const compact=value.replace(/\s+/g,"");
+  const hasVideoFile=selectedVideoFiles.some(file=>getFileMediaType(file)==="video");
+  const hasAudioFile=selectedVideoFiles.some(file=>getFileMediaType(file)==="audio");
+  const hasImage=Boolean(selectedImageBase64);
+
+  const videoGenerateWords=[
+    "生成视频","做成视频","制作视频","变成视频","视频生成","文生视频",
+    "图生视频","让它动起来","让图片动起来","动画视频","拍成视频",
+    "create video","generate video","make a video"
+  ];
+  const imageGenerateWords=[
+    "生成图片","生成一张","画一张","绘制","做张图","做一张图","图片生成",
+    "文生图","改成","修改图片","编辑图片","换背景","去掉背景","抠图",
+    "加上","删除图片里的","修复图片","变蓝色","变红色","做成海报",
+    "create image","generate image","draw","edit image"
+  ];
+  const videoUnderstandWords=[
+    "分析视频","看看视频","视频内容","总结视频","识别视频","视频里是什么",
+    "翻译视频","提取字幕","video analysis","summarize video"
+  ];
+
+  if(videoGenerateWords.some(word=>compact.includes(word.replace(/\s+/g,""))))return "video";
+  if(imageGenerateWords.some(word=>compact.includes(word.replace(/\s+/g,""))))return "image";
+  if((hasVideoFile || hasAudioFile) && videoUnderstandWords.some(word=>compact.includes(word.replace(/\s+/g,""))))return "video_analysis";
+  if(hasVideoFile || hasAudioFile)return "video_analysis";
+  if(hasImage)return "chat";
+  return "chat";
+}
+
+function previewAutoIntent(){
+  const intent=detectAutoIntent();
+  if(intent==="image")taskMode.value="image";
+  else if(intent==="video")taskMode.value="video";
+  else taskMode.value="chat";
+  updateModeUI();
 }
 
 function updateModeUI(){
   const mode=taskMode.value;
   const options=MODEL_OPTIONS[mode] || MODEL_OPTIONS.chat;
   modelMode.innerHTML="";
-
   options.forEach(item=>{
     const option=document.createElement("option");
     option.value=item.value;
@@ -393,33 +440,33 @@ function updateModeUI(){
     modelMode.appendChild(option);
   });
 
+  // 智能判断到图片或视频生成时，自动显示对应设置。
   imageSettings.classList.toggle("show",mode==="image");
   videoSettings.classList.toggle("show",mode==="video");
-  preview.style.display=selectedImageBase64 && mode!=="video" ? "flex" : "none";
-  mediaPreview.classList.toggle("show",mode==="video" && selectedVideoFiles.length>0);
+  preview.style.display=selectedImageBase64 ? "flex" : "none";
+  mediaPreview.classList.toggle("show",selectedVideoFiles.length>0);
   if(mode!=="video")videoReferencePanel.classList.remove("show");
-  sendButton.textContent=mode==="chat"?"➤":mode==="image"?"🎨":"🎬";
-  uploadButton.title=mode==="video"?"上传参考图片、视频或音频":"上传图片";
+  sendButton.textContent=mode==="image"?"🎨":mode==="video"?"🎬":"➤";
+  uploadButton.title="上传图片、视频或音频";
 
-  if(mode==="chat"){
-    input.placeholder="Message Jerry AI...";
-    welcomeText.textContent="可以聊天、发图片、识别图片和语音输入";
-  }else if(mode==="image"){
-    input.placeholder=selectedImageBase64 ? "描述你想怎样编辑这张参考图..." : "描述你想生成的图片...";
-    welcomeText.textContent="使用豆包 Seedream 文生图或参考图编辑";
+  if(mode==="image"){
+    input.placeholder=selectedImageBase64 ? "描述想怎样修改这张图片..." : "描述想生成的图片...";
+    welcomeText.textContent="直接聊天或描述图片、视频，系统会自动选择功能";
+  }else if(mode==="video"){
+    input.placeholder=selectedVideoFiles.length ? "描述如何使用参考素材生成视频..." : "描述想生成的视频...";
+    welcomeText.textContent="直接聊天或描述图片、视频，系统会自动选择功能";
   }else{
-    input.placeholder=selectedVideoFiles.length ? "描述如何使用这些参考素材生成视频..." : "描述你想生成的视频镜头...";
-    welcomeText.textContent="使用豆包 Seedance 2.0，支持图片、视频、音频多模态参考";
+    input.placeholder=selectedImageBase64 ? "询问这张图片，或说“把它做成视频/修改图片”..." : "发消息给 Jerry AI...";
+    welcomeText.textContent="直接聊天，或上传图片、视频，系统会自动选择功能";
   }
-
   updatePreviewRole();
 }
 
 function updatePreviewRole(){
   const mode=taskMode.value;
-  if(mode==="chat") previewRole.textContent="用于图片理解";
-  if(mode==="image") previewRole.textContent="作为 Seedream 参考图/编辑原图";
-  if(mode==="video") previewRole.textContent="作为 Seedance 视频参考图";
+  if(mode==="image")previewRole.textContent="将用于图片编辑或参考图生成";
+  else if(mode==="video")previewRole.textContent="将作为视频参考图";
+  else previewRole.textContent="将用于图片理解";
 }
 
 function renderMarkdown(element,text){
@@ -637,10 +684,18 @@ function appendVideoStatus(bubble,status,text){
 
 async function handlePrimaryAction(){
   if(isSubmitting)return;
-  const mode=taskMode.value;
-  if(mode==="chat")return sendMessage();
-  if(mode==="image")return generateImage();
-  if(mode==="video")return generateVideo();
+  const intent=detectAutoIntent();
+
+  if(intent==="video_analysis"){
+    alert("当前后端还没有接入视频内容理解模型。你可以输入“生成视频”把上传的视频作为参考素材，或只上传图片进行识别。");
+    return;
+  }
+
+  taskMode.value=intent;
+  updateModeUI();
+  if(intent==="image")return generateImage();
+  if(intent==="video")return generateVideo();
+  return sendMessage();
 }
 
 function setSubmitting(value){
@@ -665,13 +720,13 @@ async function sendMessage(){
   input.value="";
   input.style.height="auto";
   clearImage();
+  selectedVideoFiles=[];
+  renderMediaPreview();
   saveAll();
   renderChatList();
 
-  const mode=modelMode.value;
-  let thinkingText="⚡ 正在思考...";
-  if(mode==="reasoner")thinkingText="🧠 深度思考中...";
-  else if(mode==="auto")thinkingText="🤖 自动判断模型中...";
+  const mode="auto";
+  const thinkingText="正在思考...";
 
   const aiMessage={role:"assistant",content:thinkingText};
   const {bubble:aiBubble}=addMessageToPage("assistant",aiMessage);
@@ -729,6 +784,8 @@ async function generateImage(){
   input.value="";
   input.style.height="auto";
   clearImage();
+  selectedVideoFiles=[];
+  renderMediaPreview();
   saveAll();
   renderChatList();
 
@@ -738,7 +795,7 @@ async function generateImage(){
   try{
     const data=await postJson(MEDIA_WORKER_URL,{
       type:"generate_image",
-      modelKey:modelMode.value,
+      modelKey:"seedream_5_pro",
       prompt,
       image:referenceImage || undefined,
       size:document.getElementById("imageSize").value,
@@ -854,7 +911,7 @@ async function generateVideo(){
 
     const data=await postJson(MEDIA_WORKER_URL,{
       type:"create_video",
-      modelKey:modelMode.value,
+      modelKey:"seedance_20",
       prompt,
       references,
       resolution:document.getElementById("videoResolution").value,
@@ -1048,9 +1105,16 @@ function renderMediaPreview(){
     remove.textContent="×";
     remove.title="移除";
     remove.onclick=()=>{
+      const removed=selectedVideoFiles[index];
       selectedVideoFiles.splice(index,1);
+      if(getFileMediaType(removed)==="image" && removed.name===selectedImageName){
+        selectedImageBase64=null;
+        selectedImageName="";
+        previewImg.src="";
+        previewName.textContent="";
+      }
       renderMediaPreview();
-      updateModeUI();
+      previewAutoIntent();
     };
 
     chip.append(icon,name,remove);
@@ -1155,13 +1219,16 @@ function confirmVoice(){
 }
 
 function clearImage(){
+  const oldName=selectedImageName;
   selectedImageBase64=null;
   selectedImageName="";
   imageInput.value="";
   preview.style.display="none";
   previewImg.src="";
   previewName.textContent="";
-  updateModeUI();
+  if(oldName)selectedVideoFiles=selectedVideoFiles.filter(file=>!(getFileMediaType(file)==="image" && file.name===oldName));
+  renderMediaPreview();
+  previewAutoIntent();
 }
 
 function compressImage(file){
