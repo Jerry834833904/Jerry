@@ -57,6 +57,7 @@ select{background:#fff;color:#111;border:1px solid #ddd;border-radius:10px;paddi
 .action-btn:hover{color:#111}
 .input-area{position:fixed;left:260px;right:0;bottom:0;background:linear-gradient(transparent,#fff 17%);padding:30px 16px 18px;max-width:100vw;overflow-x:hidden}
 .mode-settings{max-width:850px;margin:0 auto 9px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff}
+.attachment-mode-switch{max-width:850px;margin:0 auto 9px;display:none;align-items:center;gap:8px;flex-wrap:wrap}.attachment-mode-switch.show{display:flex}.attachment-mode-label{font-size:13px;color:#777}.attachment-mode-tabs{display:flex;border:1px solid #ddd;border-radius:12px;padding:3px;background:#f7f7f8}.attachment-mode-tab{border:0;background:transparent;border-radius:9px;padding:7px 13px;font-size:13px;cursor:pointer;color:#555}.attachment-mode-tab.active{background:#111;color:#fff}.setting-divider{width:1px;height:24px;background:#ddd;margin:0 2px}
 .setting-group{display:none;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
 .setting-group.show{display:flex}
 .setting-label{font-size:12px;color:#777}
@@ -101,9 +102,38 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 .bubble pre{background:#1e1e1e;color:#fff;padding:14px;border-radius:12px;overflow-x:auto;font-size:14px;max-width:100%}.bubble code{background:#1e1e1e;color:#fff;padding:2px 5px;border-radius:5px;font-family:monospace}.bubble pre code{padding:0;background:transparent}.bubble p{margin:0 0 10px}.bubble ul,.bubble ol{padding-left:22px}
 .error-text{color:#b42318}
 
+
+/* 媒体选择与全屏预览 */
+.sheet-mask{position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:80;display:none;align-items:flex-end;justify-content:center;padding:16px}
+.sheet-mask.show{display:flex}
+.upload-sheet{width:min(520px,100%);background:#fff;border-radius:22px;padding:14px;box-shadow:0 18px 60px rgba(0,0,0,.18)}
+.upload-sheet-title{text-align:center;font-size:13px;color:#777;margin:2px 0 12px}
+.upload-sheet-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.upload-choice{border:1px solid #e6e6e6;background:#fafafa;border-radius:16px;padding:16px 10px;cursor:pointer;text-align:center}
+.upload-choice strong{display:block;font-size:16px;margin-top:7px}.upload-choice span{font-size:12px;color:#777}
+.upload-sheet-cancel{width:100%;margin-top:10px;border:0;background:#f2f2f2;border-radius:14px;padding:12px;cursor:pointer}
+.media-viewer{position:fixed;inset:0;background:#000;z-index:100;display:none;flex-direction:column;color:#fff}
+.media-viewer.show{display:flex}
+.viewer-top{height:64px;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;gap:10px;flex-shrink:0}
+.viewer-close,.viewer-save{border:0;background:rgba(255,255,255,.13);color:#fff;border-radius:999px;padding:10px 14px;cursor:pointer}
+.viewer-mode{display:flex;background:rgba(255,255,255,.13);border-radius:999px;padding:3px;gap:2px}
+.viewer-mode button{border:0;background:transparent;color:#ddd;border-radius:999px;padding:8px 15px;cursor:pointer}
+.viewer-mode button.active{background:#fff;color:#111}
+.viewer-body{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:10px}
+.viewer-body img,.viewer-body video{max-width:100%;max-height:100%;object-fit:contain;-webkit-user-select:none;user-select:none}
+.viewer-hint{text-align:center;font-size:12px;color:#bbb;padding:8px 12px 16px;flex-shrink:0}
+.viewer-generate{display:flex;gap:8px;justify-content:center;padding:0 12px 14px;flex-shrink:0}
+.viewer-generate button{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:9px 15px;cursor:pointer}
+
 @media(max-width:760px){
 .sidebar{position:fixed;left:-270px;top:0;bottom:0;z-index:20;transition:.25s}.sidebar.show{left:0}.menu-btn{display:block;left:10px}.header{padding:0 10px}.header-center{gap:5px}.header-center .logo-text{display:inline;font-size:20px}.header-center select{max-width:128px;font-size:12px;padding:6px}.header-spacer{display:none}.chat{padding:16px 12px 245px}.message{max-width:100%}.content{max-width:100%}.ai .content{width:100%;padding:0 10px}.user .content{max-width:82%}.input-area{left:0;padding:26px 12px 14px}.msg-img{max-width:74vw}.msg-video{width:76vw}.status-card{min-width:70vw}.mode-settings{gap:5px}.small-select{font-size:12px;max-width:150px}.toggle-label{font-size:12px;padding:5px 7px}.reference-grid{grid-template-columns:1fr}.reference-panel{max-height:245px;overflow:auto}
 }
+
+.quick-tools{max-width:850px;margin:0 auto 8px;display:flex;gap:8px;overflow-x:auto;padding:2px 1px;scrollbar-width:none}
+.quick-tools::-webkit-scrollbar{display:none}
+.quick-tool{border:1px solid #ddd;background:#fff;color:#222;border-radius:14px;padding:8px 13px;font-size:14px;white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:6px}
+.quick-tool.active{background:#111;color:#fff;border-color:#111}
+.quick-tool:active{transform:scale(.98)}
 </style>
 </head>
 
@@ -148,16 +178,29 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
         <input id="autoSpeak" type="checkbox">
       </div>
 
+      <div id="attachmentModeSwitch" class="attachment-mode-switch">
+        <span class="attachment-mode-label">生成方式</span>
+        <div class="attachment-mode-tabs">
+          <button id="attachmentImageMode" type="button" class="attachment-mode-tab" onclick="chooseAttachmentMode('image')">🖼️ 生成图片</button>
+          <button id="attachmentVideoMode" type="button" class="attachment-mode-tab" onclick="chooseAttachmentMode('video')">🎬 生成视频</button>
+        </div>
+      </div>
+
       <div class="mode-settings">
         <div id="imageSettings" class="setting-group">
           <span class="setting-label">图片设置</span>
-          <select id="imageSize" class="small-select">
-            <option value="2K">自适应 2K</option>
-            <option value="1024x1024">1:1</option>
-            <option value="1424x800">16:9</option>
-            <option value="800x1424">9:16</option>
-            <option value="1152x864">4:3</option>
-            <option value="864x1152">3:4</option>
+          <select id="imageResolution" class="small-select" title="图片分辨率">
+            <option value="1080p">高清 1080P</option>
+            <option value="2K" selected>超清 2K</option>
+            <option value="4K">极清 4K</option>
+          </select>
+          <select id="imageRatio" class="small-select" title="图片比例">
+            <option value="auto">自适应比例</option>
+            <option value="1:1">1:1 方形</option>
+            <option value="16:9">16:9 横图</option>
+            <option value="9:16">9:16 竖图</option>
+            <option value="4:3">4:3 横图</option>
+            <option value="3:4">3:4 竖图</option>
           </select>
           <label class="toggle-label"><input id="imageWatermark" type="checkbox"> 水印</label>
         </div>
@@ -231,8 +274,13 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
         <button class="voice-action ok-btn" onclick="confirmVoice()">✓</button>
       </div>
 
+      <div id="quickTools" class="quick-tools">
+        <button id="quickImage" type="button" class="quick-tool" onclick="selectQuickMode('image')">🖼️ 图片生成</button>
+        <button id="quickVideo" type="button" class="quick-tool" onclick="selectQuickMode('video')">🎬 视频生成</button>
+      </div>
+
       <div id="inputBox" class="input-box">
-        <button id="uploadButton" class="icon-btn" onclick="openUploadPicker()" title="上传图片">＋</button>
+        <button id="uploadButton" class="icon-btn" onclick="openDirectPicker()" title="上传图片或视频">＋</button>
         <input id="imageInput" type="file" accept="image/*">
         <input id="mediaInput" type="file" accept="image/*,video/*,audio/*" multiple>
         <button class="icon-btn" onclick="startVoice()" title="语音输入">🎤</button>
@@ -243,6 +291,24 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
       <div class="note">如有建议需要优化的地方请联系微信：Jeri926</div>
     </div>
   </div>
+</div>
+
+
+<div id="mediaViewer" class="media-viewer" aria-hidden="true">
+  <div class="viewer-top">
+    <button class="viewer-close" onclick="closeMediaViewer()">✕</button>
+    <div id="viewerMode" class="viewer-mode">
+      <button id="viewerImageTab" class="active" onclick="useViewerAsImage()">图片</button>
+      <button id="viewerVideoTab" onclick="useViewerAsVideo()">视频</button>
+    </div>
+    <button class="viewer-save" onclick="saveViewerMedia()">保存</button>
+  </div>
+  <div id="viewerBody" class="viewer-body"></div>
+  <div id="viewerGenerate" class="viewer-generate">
+    <button onclick="useViewerAsImage()">生成图片</button>
+    <button onclick="useViewerAsVideo()">生成视频</button>
+  </div>
+  <div class="viewer-hint">手机可长按图片或视频保存；也可以点击右上角“保存”</div>
 </div>
 
 <script>
@@ -288,9 +354,14 @@ const voicePanel = document.getElementById("voicePanel");
 const voiceText = document.getElementById("voiceText");
 const taskMode = document.getElementById("taskMode");
 const modelMode = document.getElementById("modelMode");
+const attachmentModeSwitch=document.getElementById("attachmentModeSwitch");
+const attachmentImageMode=document.getElementById("attachmentImageMode");
+const attachmentVideoMode=document.getElementById("attachmentVideoMode");
 const imageSettings = document.getElementById("imageSettings");
 const videoSettings = document.getElementById("videoSettings");
 const sendButton = document.getElementById("sendButton");
+const quickImage = document.getElementById("quickImage");
+const quickVideo = document.getElementById("quickVideo");
 
 let selectedImageBase64 = null;
 let selectedImageName = "";
@@ -300,6 +371,7 @@ let currentId = localStorage.getItem("jerry_current_id");
 let recognition = null;
 let voiceResult = "";
 let isSubmitting = false;
+let forcedTaskMode = null;
 const activeVideoPolls = new Set();
 
 if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
@@ -311,7 +383,7 @@ renderMessages();
 input.addEventListener("input",()=>{
   input.style.height="auto";
   input.style.height=input.scrollHeight+"px";
-  previewAutoIntent();
+  if(!forcedTaskMode) previewAutoIntent();
 });
 
 input.addEventListener("keydown",e=>{
@@ -341,6 +413,7 @@ imageInput.addEventListener("change",async()=>{
 
   // 上传图片后先进入图片处理状态；输入具体指令后仍会自动判断：
   // “这是什么”走图片理解，“变成红色”走图片编辑，“让它动起来”走视频生成。
+  forcedTaskMode="image";
   taskMode.value="image";
   updateModeUI();
   input.focus();
@@ -379,9 +452,9 @@ mediaInput.addEventListener("change",async()=>{
   });
   const hasImageFile=selectedVideoFiles.some(file=>getFileMediaType(file)==="image") || Boolean(selectedImageBase64);
 
-  if(hasVideoOrAudio) taskMode.value="video";
-  else if(hasImageFile) taskMode.value="image";
-  else taskMode.value="chat";
+  if(hasVideoOrAudio){ forcedTaskMode="video"; taskMode.value="video"; }
+  else if(hasImageFile){ forcedTaskMode="image"; taskMode.value="image"; }
+  else { forcedTaskMode=null; taskMode.value="chat"; }
 
   updateModeUI();
   input.focus();
@@ -397,14 +470,57 @@ function setTaskMode(mode){
   input.focus();
 }
 
-function openUploadPicker(){
+function openDirectPicker(){
+  mediaInput.accept="image/*,video/*,audio/*";
+  mediaInput.multiple=true;
   mediaInput.click();
+}
+
+function selectQuickMode(mode){
+  if(mode!=="image" && mode!=="video")return;
+  forcedTaskMode = forcedTaskMode===mode ? null : mode;
+  if(forcedTaskMode) taskMode.value=forcedTaskMode;
+  else taskMode.value=detectAutoIntent();
+  updateModeUI();
+  input.focus();
 }
 
 function toggleReferencePanel(){
   taskMode.value="video";
   updateModeUI();
   videoReferencePanel.classList.toggle("show");
+}
+
+function chooseAttachmentMode(mode){
+  if(mode!=="image" && mode!=="video")return;
+  forcedTaskMode=mode;
+  taskMode.value=mode;
+  updateModeUI();
+  input.focus();
+}
+
+function resolveImageSize(){
+  const resolution=document.getElementById("imageResolution")?.value || "2K";
+  const ratio=document.getElementById("imageRatio")?.value || "auto";
+
+  // 后端兼容明确像素尺寸；自适应模式直接传分辨率档位。
+  if(ratio==="auto")return resolution;
+
+  const map={
+    "1080p":{
+      "1:1":"1024x1024","16:9":"1424x800","9:16":"800x1424",
+      "4:3":"1152x864","3:4":"864x1152"
+    },
+    "2K":{
+      "1:1":"2048x2048","16:9":"2560x1440","9:16":"1440x2560",
+      "4:3":"2304x1728","3:4":"1728x2304"
+    },
+    "4K":{
+      "1:1":"4096x4096","16:9":"4096x2304","9:16":"2304x4096",
+      "4:3":"4096x3072","3:4":"3072x4096"
+    }
+  };
+  return map[resolution]?.[ratio] || resolution;
 }
 
 function detectAutoIntent(text=input.value.trim()){
@@ -522,7 +638,7 @@ function detectAutoIntent(text=input.value.trim()){
   return "chat";
 }
 function previewAutoIntent(){
-  const intent=detectAutoIntent();
+  const intent=forcedTaskMode || detectAutoIntent();
   if(intent==="image")taskMode.value="image";
   else if(intent==="video")taskMode.value="video";
   else taskMode.value="chat";
@@ -531,6 +647,8 @@ function previewAutoIntent(){
 
 function updateModeUI(){
   const mode=taskMode.value;
+  quickImage?.classList.toggle("active",forcedTaskMode==="image");
+  quickVideo?.classList.toggle("active",forcedTaskMode==="video");
   const options=MODEL_OPTIONS[mode] || MODEL_OPTIONS.chat;
   modelMode.innerHTML="";
   options.forEach(item=>{
@@ -543,6 +661,19 @@ function updateModeUI(){
   // 智能判断到图片或视频生成时，自动显示对应设置。
   imageSettings.classList.toggle("show",mode==="image");
   videoSettings.classList.toggle("show",mode==="video");
+
+  const hasAttachment=Boolean(selectedImageBase64) || selectedVideoFiles.length>0;
+  attachmentModeSwitch.classList.toggle("show",hasAttachment);
+  attachmentImageMode.classList.toggle("active",mode==="image");
+  attachmentVideoMode.classList.toggle("active",mode==="video");
+
+  // 音频单独上传时不提供图片生成入口。
+  const hasVisualAttachment=Boolean(selectedImageBase64) || selectedVideoFiles.some(file=>{
+    const type=getFileMediaType(file);
+    return type==="image" || type==="video";
+  });
+  attachmentImageMode.style.display=hasVisualAttachment?"":"none";
+
   preview.style.display=selectedImageBase64 ? "flex" : "none";
   mediaPreview.classList.toggle("show",selectedVideoFiles.length>0);
   if(mode!=="video")videoReferencePanel.classList.remove("show");
@@ -553,7 +684,7 @@ function updateModeUI(){
     input.placeholder=selectedImageBase64 ? "描述要识别、修改或生成什么，例如“这是什么”或“变成红色”..." : "描述想生成的图片...";
     welcomeText.textContent="";
   }else if(mode==="video"){
-    input.placeholder=selectedVideoFiles.length ? "描述要如何处理视频素材，例如“让它动起来”或“生成视频”..." : "描述想生成的视频...";
+    input.placeholder=(selectedImageBase64 || selectedVideoFiles.length) ? "描述照片或视频要如何动起来，例如“让鸭子跳舞”..." : "描述想生成的视频...";
     welcomeText.textContent="";
   }else{
     input.placeholder=selectedImageBase64 ? "询问这张图片，或说“把它做成视频/修改图片”..." : "发消息给 Jerry AI...";
@@ -565,7 +696,7 @@ function updateModeUI(){
 function updatePreviewRole(){
   const mode=taskMode.value;
   if(mode==="image")previewRole.textContent="将用于图片编辑或参考图生成";
-  else if(mode==="video")previewRole.textContent="将作为视频参考图";
+  else if(mode==="video")previewRole.textContent="将作为首帧或参考素材生成视频";
   else previewRole.textContent="将用于图片理解";
 }
 
@@ -692,7 +823,7 @@ function addMessageToPage(role,message={}){
     img.src=message.image;
     img.alt="生成或上传的图片";
     img.title="点击打开原图";
-    img.onclick=()=>openMedia(message.image,"jerry-ai-image.png");
+    img.onclick=()=>openMediaViewer(message.image,"image","jerry-ai-image.png");
     bubble.appendChild(img);
   }
 
@@ -715,13 +846,13 @@ function addMessageToPage(role,message={}){
     const open=document.createElement("button");
     open.className="action-btn";
     open.textContent="打开原图";
-    open.onclick=()=>openMedia(message.image,"jerry-ai-image.png");
+    open.onclick=()=>openMediaViewer(message.image,"image","jerry-ai-image.png");
     actions.appendChild(open);
 
     const down=document.createElement("button");
     down.className="action-btn";
     down.textContent="保存图片";
-    down.onclick=()=>downloadFile(message.image,"jerry-ai-image.png");
+    down.onclick=()=>downloadFileDirect(message.image,"jerry-ai-image.png","image");
     actions.appendChild(down);
   }
 
@@ -729,7 +860,7 @@ function addMessageToPage(role,message={}){
     const downVideo=document.createElement("button");
     downVideo.className="action-btn";
     downVideo.textContent="下载视频";
-    downVideo.onclick=()=>downloadFile(message.video,"jerry-ai-video.mp4",true);
+    downVideo.onclick=()=>downloadFileDirect(message.video,"jerry-ai-video.mp4","video");
     actions.appendChild(downVideo);
   }
 
@@ -758,6 +889,9 @@ function appendVideo(bubble,url){
   video.controls=true;
   video.playsInline=true;
   video.preload="metadata";
+  video.setAttribute("webkit-playsinline","");
+  video.title="双击全屏打开，手机可长按保存";
+  video.ondblclick=()=>openMediaViewer(url,"video","jerry-ai-video.mp4");
   bubble.appendChild(video);
 }
 
@@ -898,7 +1032,7 @@ async function generateImage(){
       modelKey:"seedream_5_pro",
       prompt,
       image:referenceImage || undefined,
-      size:document.getElementById("imageSize").value,
+      size:resolveImageSize(),
       watermark:document.getElementById("imageWatermark").checked
     });
 
@@ -909,7 +1043,7 @@ async function generateImage(){
     img.className="msg-img";
     img.alt="生成图片";
     img.title="点击打开原图";
-    img.onclick=()=>openMedia(data.image,"jerry-ai-image.png");
+    img.onclick=()=>openMediaViewer(data.image,"image","jerry-ai-image.png");
     bubble.appendChild(img);
 
     aiMessage.content="图片生成完成：";
@@ -1356,52 +1490,96 @@ function compressImage(file){
   });
 }
 
-function mediaProxyUrl(url,filename,mode="attachment"){
-  return WORKER_URL.replace(/\/+$/,'')+
-    '/download?url='+encodeURIComponent(url)+
-    '&filename='+encodeURIComponent(filename)+
-    '&mode='+encodeURIComponent(mode);
+let viewerMedia={url:"",type:"image",filename:""};
+
+function openMediaViewer(url,type="image",filename="jerry-ai-media"){
+  viewerMedia={url,type,filename};
+  const viewer=document.getElementById("mediaViewer");
+  const body=document.getElementById("viewerBody");
+  const imageTab=document.getElementById("viewerImageTab");
+  const videoTab=document.getElementById("viewerVideoTab");
+  const generate=document.getElementById("viewerGenerate");
+  body.innerHTML="";
+  if(type==="video"){
+    const video=document.createElement("video");
+    video.src=url;video.controls=true;video.playsInline=true;video.autoplay=false;video.preload="metadata";
+    video.setAttribute("webkit-playsinline","");
+    body.appendChild(video);
+    imageTab.style.display="none";videoTab.classList.add("active");generate.style.display="none";
+  }else{
+    const img=document.createElement("img");
+    img.src=url;img.alt="原图";img.draggable=false;
+    body.appendChild(img);
+    imageTab.style.display="";imageTab.classList.add("active");videoTab.classList.remove("active");generate.style.display="flex";
+  }
+  viewer.classList.add("show");
+  viewer.setAttribute("aria-hidden","false");
+  document.body.style.overflow="hidden";
 }
 
-function openMedia(url,filename){
-  const proxyUrl=mediaProxyUrl(url,filename,"inline");
-  const opened=window.open(proxyUrl,'_blank','noopener,noreferrer');
-  if(!opened)location.href=proxyUrl;
+function closeMediaViewer(){
+  const viewer=document.getElementById("mediaViewer");
+  viewer.classList.remove("show");viewer.setAttribute("aria-hidden","true");
+  document.getElementById("viewerBody").innerHTML="";
+  document.body.style.overflow="";
 }
 
-async function downloadFile(url,filename){
-  const proxyUrl=mediaProxyUrl(url,filename,"attachment");
+function useViewerAsImage(){
+  if(!viewerMedia.url || viewerMedia.type!=="image")return;
+  selectedImageBase64=viewerMedia.url;
+  selectedImageName=viewerMedia.filename || "reference-image";
+  previewImg.src=viewerMedia.url;
+  previewName.textContent=selectedImageName;
+  taskMode.value="image";
+  updateModeUI();
+  closeMediaViewer();
+  input.placeholder="描述要如何修改或生成图片…";
+  input.focus();
+}
 
+function useViewerAsVideo(){
+  if(!viewerMedia.url || viewerMedia.type!=="image")return;
+  const current=String(videoImageUrls.value || "").trim();
+  if(!current.split(/\r?\n/).includes(viewerMedia.url)){
+    videoImageUrls.value=current ? current+"\n"+viewerMedia.url : viewerMedia.url;
+  }
+  taskMode.value="video";
+  updateModeUI();
+  closeMediaViewer();
+  input.placeholder="描述如何让这张图片生成视频…";
+  input.focus();
+}
+
+async function saveViewerMedia(){
+  await downloadFileDirect(viewerMedia.url,viewerMedia.filename,viewerMedia.type);
+}
+
+async function downloadFileDirect(url,filename,type="file"){
   try{
-    const response=await fetch(proxyUrl);
-    if(!response.ok)throw new Error('下载失败，HTTP '+response.status);
+    const response=await fetch(url,{mode:"cors",credentials:"omit"});
+    if(!response.ok)throw new Error("HTTP "+response.status);
     const blob=await response.blob();
-    const file=new File([blob],filename,{type:blob.type || 'application/octet-stream'});
-
-    // iPhone/iPad 优先调出系统分享面板，可选择“存储到文件”或保存视频/图片。
+    const safeName=filename || (type==="video"?"jerry-ai-video.mp4":"jerry-ai-image.png");
+    const file=new File([blob],safeName,{type:blob.type || (type==="video"?"video/mp4":"image/png")});
     if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file],title:filename});
+      await navigator.share({files:[file],title:safeName});
       return;
     }
-
     const objectUrl=URL.createObjectURL(blob);
-    triggerDownload(objectUrl,filename);
-    setTimeout(()=>URL.revokeObjectURL(objectUrl),5000);
+    triggerDownload(objectUrl,safeName);
+    setTimeout(()=>URL.revokeObjectURL(objectUrl),10000);
   }catch(error){
-    // 用户取消系统分享不算错误。
-    if(error && error.name==='AbortError')return;
-    window.open(proxyUrl,'_blank','noopener,noreferrer');
+    if(error && error.name==="AbortError")return;
+    // 跨域资源若不允许前端读取，直接打开原始媒体，用户可长按保存。
+    openMediaViewer(url,type,filename);
+    alert("当前媒体服务器不允许浏览器直接下载，请在全屏页面长按媒体保存。");
   }
 }
 
 function triggerDownload(url,filename){
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=filename;
-  a.rel='noopener';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  const a=document.createElement("a");
+  a.href=url;a.download=filename;a.rel="noopener";
+  document.body.appendChild(a);a.click();a.remove();
 }
 
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
