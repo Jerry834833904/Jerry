@@ -24,12 +24,12 @@ button,select,textarea,input{font:inherit}
 .delete-chat{border:none;background:transparent;color:#999;font-size:14px;cursor:pointer;padding:4px}
 .delete-chat:hover{color:#e11d48}
 .main{flex:1;display:flex;flex-direction:column;height:100vh;background:#fff;max-width:100vw;overflow-x:hidden}
-.header{height:60px;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#fff;flex-shrink:0}
-.menu-btn{display:none;background:none;border:none;color:#111;font-size:22px}
-.header-center{display:flex;align-items:center;gap:8px;color:#111;min-width:0}
+.header{height:60px;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:center;padding:0 16px;background:#fff;flex-shrink:0;position:relative}
+.menu-btn{display:none;background:none;border:none;color:#111;font-size:22px;position:absolute;left:16px;top:50%;transform:translateY(-50%)}
+.header-center{display:flex;align-items:center;justify-content:center;gap:8px;color:#111;min-width:0;position:absolute;left:50%;transform:translateX(-50%)}
 .header-center .logo-text{font-size:20px;white-space:nowrap;font-weight:650}
 select{background:#fff;color:#111;border:1px solid #ddd;border-radius:10px;padding:7px 9px;max-width:230px}
-.header-spacer{width:38px}
+.header-spacer{display:none}
 .chat{flex:1;overflow-y:auto;overflow-x:hidden;padding:24px 16px 225px;background:#fff;max-width:100vw}
 .welcome{text-align:center;margin-top:14vh;color:#333}
 .welcome h1{font-size:34px;color:#111;margin-bottom:10px}
@@ -102,7 +102,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 .error-text{color:#b42318}
 
 @media(max-width:760px){
-.sidebar{position:fixed;left:-270px;top:0;bottom:0;z-index:20;transition:.25s}.sidebar.show{left:0}.menu-btn{display:block}.header{padding:0 10px}.header-center{gap:5px}.header-center .logo-text{display:none}.header-center select{max-width:128px;font-size:12px;padding:6px}.header-spacer{display:none}.chat{padding:16px 12px 245px}.message{max-width:100%}.content{max-width:100%}.ai .content{width:100%;padding:0 10px}.user .content{max-width:82%}.input-area{left:0;padding:26px 12px 14px}.msg-img{max-width:74vw}.msg-video{width:76vw}.status-card{min-width:70vw}.mode-settings{gap:5px}.small-select{font-size:12px;max-width:150px}.toggle-label{font-size:12px;padding:5px 7px}.reference-grid{grid-template-columns:1fr}.reference-panel{max-height:245px;overflow:auto}
+.sidebar{position:fixed;left:-270px;top:0;bottom:0;z-index:20;transition:.25s}.sidebar.show{left:0}.menu-btn{display:block;left:10px}.header{padding:0 10px}.header-center{gap:5px}.header-center .logo-text{display:inline;font-size:20px}.header-center select{max-width:128px;font-size:12px;padding:6px}.header-spacer{display:none}.chat{padding:16px 12px 245px}.message{max-width:100%}.content{max-width:100%}.ai .content{width:100%;padding:0 10px}.user .content{max-width:82%}.input-area{left:0;padding:26px 12px 14px}.msg-img{max-width:74vw}.msg-video{width:76vw}.status-card{min-width:70vw}.mode-settings{gap:5px}.small-select{font-size:12px;max-width:150px}.toggle-label{font-size:12px;padding:5px 7px}.reference-grid{grid-template-columns:1fr}.reference-panel{max-height:245px;overflow:auto}
 }
 </style>
 </head>
@@ -120,8 +120,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
 
       <div class="header-center">
-        <span class="logo-text">Jerry AI</span>
-        <span class="smart-mode">GPT6.0</span>
+        <span class="logo-text">GPT6.0</span>
         <select id="taskMode" aria-label="功能模式" hidden>
           <option value="chat">AI 聊天</option>
           <option value="image">图片生成</option>
@@ -136,7 +135,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
     <div id="chat" class="chat">
       <div id="welcome" class="welcome">
         <h1>Jerry AI</h1>
-        <p id="welcomeText">可以聊天、发图片、识别图片、语音输入、生成图片和视频</p>
+        <p id="welcomeText" hidden></p>
         <div class="mode-hints">
           <span class="mode-hint">直接输入文字，或上传图片、视频，Jerry AI 会自动选择功能</span>
         </div>
@@ -339,7 +338,12 @@ imageInput.addEventListener("change",async()=>{
   previewImg.src=selectedImageBase64;
   previewName.textContent=file.name;
   preview.style.display="flex";
-  updatePreviewRole();
+
+  // 上传图片后先进入图片处理状态；输入具体指令后仍会自动判断：
+  // “这是什么”走图片理解，“变成红色”走图片编辑，“让它动起来”走视频生成。
+  taskMode.value="image";
+  updateModeUI();
+  input.focus();
 });
 
 mediaInput.addEventListener("change",async()=>{
@@ -367,7 +371,20 @@ mediaInput.addEventListener("change",async()=>{
   }
   mediaInput.value="";
   renderMediaPreview();
-  previewAutoIntent();
+
+  // 根据刚上传的素材直接进入对应处理状态。
+  const hasVideoOrAudio=selectedVideoFiles.some(file=>{
+    const type=getFileMediaType(file);
+    return type==="video" || type==="audio";
+  });
+  const hasImageFile=selectedVideoFiles.some(file=>getFileMediaType(file)==="image") || Boolean(selectedImageBase64);
+
+  if(hasVideoOrAudio) taskMode.value="video";
+  else if(hasImageFile) taskMode.value="image";
+  else taskMode.value="chat";
+
+  updateModeUI();
+  input.focus();
 });
 
 function safeParse(value,fallback){
@@ -391,36 +408,119 @@ function toggleReferencePanel(){
 }
 
 function detectAutoIntent(text=input.value.trim()){
-  const value=String(text || "").toLowerCase();
-  const compact=value.replace(/\s+/g,"");
-  const hasVideoFile=selectedVideoFiles.some(file=>getFileMediaType(file)==="video");
-  const hasAudioFile=selectedVideoFiles.some(file=>getFileMediaType(file)==="audio");
-  const hasImage=Boolean(selectedImageBase64);
+  const raw=String(text || "");
+  const value=raw.toLowerCase();
+  const compact=value.replace(/[\s，。！？、,.!?：:；;“”"'（）()【】\[\]]+/g,"");
 
+  const files=selectedVideoFiles.map(file=>getFileMediaType(file));
+  const hasVideoFile=files.includes("video");
+  const hasAudioFile=files.includes("audio");
+  const hasImageFile=files.includes("image");
+  const hasImage=Boolean(selectedImageBase64) || hasImageFile;
+  const hasAnyFile=hasImage || hasVideoFile || hasAudioFile;
+
+  const includesAny=(words)=>words.some(word=>compact.includes(String(word).toLowerCase().replace(/\s+/g,"")));
+  const matchAny=(patterns)=>patterns.some(pattern=>pattern.test(value));
+
+  // 视频生成、图生视频、视频续写：优先级最高。
   const videoGenerateWords=[
-    "生成视频","做成视频","制作视频","变成视频","视频生成","文生视频",
-    "图生视频","让它动起来","让图片动起来","动画视频","拍成视频",
-    "create video","generate video","make a video"
+    "生成视频","做成视频","制作视频","变成视频","视频生成","文生视频","图生视频",
+    "让它动起来","让图片动起来","让照片动起来","动起来","做成动画","生成动画",
+    "拍成视频","做个短片","生成短片","做个视频","来个视频","视频化","转成视频",
+    "让她走路","让他走路","让她跳舞","让他跳舞","让她说话","让他开口",
+    "眨眼","微笑","挥手","转身","奔跑","飞起来","镜头推进","镜头拉远","运镜",
+    "延长视频","续写视频","扩展视频","补帧","首尾帧","参考视频","视频同款",
+    "createvideo","generatevideo","makeavideo","animate","imagetovideo","texttovideo"
   ];
-  const imageGenerateWords=[
-    "生成图片","生成一张","画一张","绘制","做张图","做一张图","图片生成",
-    "文生图","改成","修改图片","编辑图片","换背景","去掉背景","抠图",
-    "加上","删除图片里的","修复图片","变蓝色","变红色","做成海报",
-    "create image","generate image","draw","edit image"
-  ];
-  const videoUnderstandWords=[
-    "分析视频","看看视频","视频内容","总结视频","识别视频","视频里是什么",
-    "翻译视频","提取字幕","video analysis","summarize video"
+  const videoGeneratePatterns=[
+    /(让|使).{0,10}(动|走|跑|跳|笑|哭|说话|开口|眨眼|挥手|转身|飞)/i,
+    /(图片|照片|人物|她|他|它).{0,10}(动起来|做成视频|生成视频|变成动画)/i,
+    /(生成|制作|做|来).{0,6}(一段|一个|个)?(短视频|视频|动画|短片)/i
   ];
 
-  if(videoGenerateWords.some(word=>compact.includes(word.replace(/\s+/g,""))))return "video";
-  if(imageGenerateWords.some(word=>compact.includes(word.replace(/\s+/g,""))))return "image";
-  if((hasVideoFile || hasAudioFile) && videoUnderstandWords.some(word=>compact.includes(word.replace(/\s+/g,""))))return "video_analysis";
-  if(hasVideoFile || hasAudioFile)return "video_analysis";
-  if(hasImage)return "chat";
+  // 图片编辑/重绘，覆盖颜色、背景、人物、文字、风格、修图等常见自然表达。
+  const imageEditWords=[
+    "变成","改成","换成","修改","编辑","重绘","重新画","重新生成","调整",
+    "换背景","改背景","去背景","去掉背景","删除背景","背景透明","抠图","透明底",
+    "去掉","删除","移除","擦除","消除","加上","添加","放一个","补上","替换",
+    "变红","变红色","红一点","改红色","换红色","变蓝","变蓝色","改蓝色","变黄","变黄色",
+    "改颜色","换颜色","调颜色","换发色","改发色","头发变","衣服变","眼睛变","皮肤变",
+    "换衣服","换装","换发型","加眼镜","去眼镜","加帽子","去水印","去文字","改文字",
+    "美化","修图","磨皮","瘦脸","美白","祛痘","高清","增强清晰度","放大","扩图","补全",
+    "动漫","二次元","卡通","吉卜力","油画","水彩","素描","赛博朋克","写实","q版","3d",
+    "海报","证件照","头像","壁纸","电商图","主图","换季节","换天气","白天变夜晚","夜景",
+    "editimage","change","replace","remove","add","recolor","restyle","inpaint","outpaint"
+  ];
+  const imageEditPatterns=[
+    /(把|将).{0,16}(变成|改成|换成|修改为|调整为|做成)/i,
+    /(头发|发色|衣服|背景|天空|眼睛|皮肤|车|花|墙|颜色).{0,8}(红|黄|蓝|绿|黑|白|紫|粉|橙|灰|透明|亮|暗)/i,
+    /(改|换|变|调).{0,8}(颜色|背景|发型|发色|衣服|风格|文字|尺寸|比例)/i,
+    /(删除|去掉|移除|擦除|加上|添加|替换).{0,16}/i,
+    /(修复|美化|增强|高清|放大|扩展|补全|抠图).{0,12}/i
+  ];
+
+  // 图片理解/OCR/问答。只有明确询问图片内容时才进入视觉聊天。
+  const visionWords=[
+    "这是什么","是什么东西","图片里有什么","图里有什么","照片里有什么","这张图","这张照片",
+    "帮我看看","看一下","分析图片","识别图片","描述图片","介绍图片","解释图片",
+    "这是谁","这个人是谁","什么花","什么动物","什么车","什么牌子","什么型号","哪里",
+    "读一下","读出来","提取文字","识别文字","ocr","翻译图片","图片翻译","看得清吗",
+    "判断真假","是不是","有没有","多少个","数一下","什么意思","什么问题","哪里坏了",
+    "describeimage","analyzeimage","whatisthis","readthetext","ocr"
+  ];
+  const visionPatterns=[
+    /^(这|那|图里|图片里|照片里).{0,12}(是|有|在|叫什么|什么意思|怎么了)/i,
+    /(识别|分析|描述|解释|判断|检查|看看).{0,8}(图|图片|照片|内容|文字|物体|人物)/i,
+    /(图|图片|照片).{0,8}(是什么|有什么|是谁|在哪里|什么意思)/i
+  ];
+
+  // 视频理解；有视频时，只有明确“分析/总结/字幕”等才进入理解提示。
+  const videoUnderstandWords=[
+    "分析视频","看看视频","视频内容","总结视频","识别视频","视频里是什么","视频里有什么",
+    "讲了什么","发生了什么","提取字幕","识别字幕","翻译视频","视频翻译","提取文案",
+    "分析动作","分析镜头","视频时长","视频总结","summarizevideo","analyzevideo","transcribevideo"
+  ];
+  const videoUnderstandPatterns=[
+    /(分析|总结|识别|描述|解释|翻译|提取).{0,8}(视频|字幕|声音|内容|文案)/i,
+    /(视频里|这个视频).{0,8}(是什么|有什么|讲了什么|发生了什么)/i
+  ];
+
+  // 纯文字文生图。
+  const imageGenerateWords=[
+    "生成图片","生成一张图","生成一张图片","画一张","画一个","帮我画","绘制","做张图","做一张图",
+    "图片生成","文生图","设计一张","设计海报","设计logo","制作海报","制作头像","来张图","出一张图",
+    "生成壁纸","生成头像","生成封面","createimage","generateimage","drawapicture","texttoimage"
+  ];
+  const imageGeneratePatterns=[
+    /(生成|画|绘制|设计|制作|做|来|出).{0,6}(一张|一个|张|个)?(图片|图|海报|头像|壁纸|封面|插画|logo)/i
+  ];
+
+  const isVideoGenerate=includesAny(videoGenerateWords) || matchAny(videoGeneratePatterns);
+  const isImageEdit=includesAny(imageEditWords) || matchAny(imageEditPatterns);
+  const isVision=includesAny(visionWords) || matchAny(visionPatterns);
+  const isVideoUnderstand=includesAny(videoUnderstandWords) || matchAny(videoUnderstandPatterns);
+  const isImageGenerate=includesAny(imageGenerateWords) || matchAny(imageGeneratePatterns);
+
+  // 附件优先路由，避免上传图片/视频后误入普通聊天。
+  if(hasVideoFile || hasAudioFile){
+    if(isVideoUnderstand && !isVideoGenerate)return "video_analysis";
+    return "video";
+  }
+
+  if(hasImage){
+    if(isVideoGenerate)return "video";
+    if(isImageEdit)return "image";
+    if(isVision)return "chat";
+    // 上传图片后只要写了处理要求，默认按图片编辑，而不是普通对话。
+    if(compact.length>0)return "image";
+    return "chat";
+  }
+
+  // 无附件时按明确意图判断。
+  if(isVideoGenerate)return "video";
+  if(isImageGenerate || isImageEdit)return "image";
   return "chat";
 }
-
 function previewAutoIntent(){
   const intent=detectAutoIntent();
   if(intent==="image")taskMode.value="image";
@@ -450,14 +550,14 @@ function updateModeUI(){
   uploadButton.title="上传图片、视频或音频";
 
   if(mode==="image"){
-    input.placeholder=selectedImageBase64 ? "描述想怎样修改这张图片..." : "描述想生成的图片...";
-    welcomeText.textContent="直接聊天或描述图片、视频，系统会自动选择功能";
+    input.placeholder=selectedImageBase64 ? "描述要识别、修改或生成什么，例如“这是什么”或“变成红色”..." : "描述想生成的图片...";
+    welcomeText.textContent="";
   }else if(mode==="video"){
-    input.placeholder=selectedVideoFiles.length ? "描述如何使用参考素材生成视频..." : "描述想生成的视频...";
-    welcomeText.textContent="直接聊天或描述图片、视频，系统会自动选择功能";
+    input.placeholder=selectedVideoFiles.length ? "描述要如何处理视频素材，例如“让它动起来”或“生成视频”..." : "描述想生成的视频...";
+    welcomeText.textContent="";
   }else{
     input.placeholder=selectedImageBase64 ? "询问这张图片，或说“把它做成视频/修改图片”..." : "发消息给 Jerry AI...";
-    welcomeText.textContent="直接聊天，或上传图片、视频，系统会自动选择功能";
+    welcomeText.textContent="";
   }
   updatePreviewRole();
 }
