@@ -818,7 +818,7 @@ async function generateVideo(){
     content:"视频任务正在创建...",
     mediaType:"video",
     status:"creating",
-    statusText:localFiles.length?"正在上传本地参考素材...":"正在创建视频任务..."
+    statusText:localFiles.length?"正在处理本地参考素材...":"正在创建视频任务..."
   };
   const aiIndex=c.messages.length;
   c.messages.push(aiMessage);
@@ -829,9 +829,22 @@ async function generateVideo(){
   try{
     const uploadedReferences=[];
     for(let i=0;i<localFiles.length;i++){
-      aiMessage.statusText=`正在上传参考素材 ${i+1}/${localFiles.length}：${localFiles[i].name}`;
+      const file=localFiles[i];
+      const mediaType=getFileMediaType(file);
+
+      // 本地图片直接转成 Base64 传给 Seedance，不需要 R2。
+      if(mediaType==="image"){
+        aiMessage.statusText=`正在处理参考图片 ${i+1}/${localFiles.length}：${file.name}`;
+        appendVideoStatus(bubble,"creating",aiMessage.statusText);
+        const imageBase64=await compressImage(file);
+        uploadedReferences.push({type:"image",url:imageBase64});
+        continue;
+      }
+
+      // 本地视频和音频文件仍需先上传到 R2，生成公网 URL。
+      aiMessage.statusText=`正在上传参考素材 ${i+1}/${localFiles.length}：${file.name}`;
       appendVideoStatus(bubble,"creating",aiMessage.statusText);
-      const uploaded=await uploadReferenceFile(localFiles[i]);
+      const uploaded=await uploadReferenceFile(file);
       uploadedReferences.push({type:uploaded.type,url:uploaded.url});
     }
 
