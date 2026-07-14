@@ -134,6 +134,19 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 .quick-tool{border:1px solid #ddd;background:#fff;color:#222;border-radius:14px;padding:8px 13px;font-size:14px;white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:6px}
 .quick-tool.active{background:#111;color:#fff;border-color:#111}
 .quick-tool:active{transform:scale(.98)}
+
+.model-switch{position:relative;display:flex;align-items:center;justify-content:center}
+.model-switch-btn{border:0;background:transparent;color:#111;font-weight:650;font-size:20px;padding:8px 10px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.model-switch-btn:hover{background:#f5f5f5}
+.model-switch-arrow{font-size:12px;color:#666;transition:transform .2s}
+.model-switch.open .model-switch-arrow{transform:rotate(180deg)}
+.model-menu{position:absolute;top:48px;left:50%;transform:translateX(-50%);width:190px;background:#fff;border:1px solid #e2e2e2;border-radius:16px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:7px;display:none;z-index:70}
+.model-switch.open .model-menu{display:block}
+.model-menu-item{width:100%;border:0;background:transparent;border-radius:11px;padding:11px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;color:#222;text-align:left}
+.model-menu-item:hover{background:#f4f4f4}
+.model-menu-item.active{background:#f1f1f1;font-weight:650}
+.model-check{width:18px;text-align:center}
+@media(max-width:760px){.model-switch-btn{font-size:20px}.model-menu{top:46px}}
 </style>
 </head>
 
@@ -150,7 +163,19 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
 
       <div class="header-center">
-        <span class="logo-text">GPT6.0</span>
+        <div id="chatModelSwitch" class="model-switch">
+          <button id="chatModelButton" type="button" class="model-switch-btn" onclick="toggleChatModelMenu(event)" aria-haspopup="true" aria-expanded="false">
+            <span id="chatModelLabel">GPT6.0</span><span class="model-switch-arrow">⌄</span>
+          </button>
+          <div id="chatModelMenu" class="model-menu" role="menu">
+            <button type="button" class="model-menu-item active" data-chat-model="gpt6" onclick="selectChatModel('gpt6')">
+              <span>GPT6.0</span><span class="model-check">✓</span>
+            </button>
+            <button type="button" class="model-menu-item" data-chat-model="doubao" onclick="selectChatModel('doubao')">
+              <span>Doubao Pro</span><span class="model-check"></span>
+            </button>
+          </div>
+        </div>
         <select id="taskMode" aria-label="功能模式" hidden>
           <option value="chat">AI 聊天</option>
           <option value="image">图片生成</option>
@@ -362,6 +387,10 @@ const videoSettings = document.getElementById("videoSettings");
 const sendButton = document.getElementById("sendButton");
 const quickImage = document.getElementById("quickImage");
 const quickVideo = document.getElementById("quickVideo");
+const chatModelSwitch = document.getElementById("chatModelSwitch");
+const chatModelButton = document.getElementById("chatModelButton");
+const chatModelLabel = document.getElementById("chatModelLabel");
+const chatModelMenu = document.getElementById("chatModelMenu");
 
 let selectedImageBase64 = null;
 let selectedImageName = "";
@@ -372,10 +401,12 @@ let recognition = null;
 let voiceResult = "";
 let isSubmitting = false;
 let forcedTaskMode = null;
+let currentChatModel = localStorage.getItem("jerry_chat_model") || "gpt6";
 const activeVideoPolls = new Set();
 
 if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 
+updateChatModelUI();
 updateModeUI();
 renderChatList();
 renderMessages();
@@ -458,6 +489,41 @@ mediaInput.addEventListener("change",async()=>{
 
   updateModeUI();
   input.focus();
+});
+
+function toggleChatModelMenu(event){
+  event?.stopPropagation();
+  const open=!chatModelSwitch.classList.contains("open");
+  chatModelSwitch.classList.toggle("open",open);
+  chatModelButton.setAttribute("aria-expanded",String(open));
+}
+
+function selectChatModel(model){
+  if(!["gpt6","doubao"].includes(model))return;
+  currentChatModel=model;
+  localStorage.setItem("jerry_chat_model",model);
+  updateChatModelUI();
+  chatModelSwitch.classList.remove("open");
+  chatModelButton.setAttribute("aria-expanded","false");
+  input.focus();
+}
+
+function updateChatModelUI(){
+  const label=currentChatModel==="doubao"?"Doubao Pro":"GPT6.0";
+  chatModelLabel.textContent=label;
+  document.querySelectorAll("[data-chat-model]").forEach(item=>{
+    const active=item.dataset.chatModel===currentChatModel;
+    item.classList.toggle("active",active);
+    const check=item.querySelector(".model-check");
+    if(check)check.textContent=active?"✓":"";
+  });
+}
+
+document.addEventListener("click",event=>{
+  if(chatModelSwitch && !chatModelSwitch.contains(event.target)){
+    chatModelSwitch.classList.remove("open");
+    chatModelButton?.setAttribute("aria-expanded","false");
+  }
 });
 
 function safeParse(value,fallback){
@@ -918,7 +984,7 @@ function appendVideoStatus(bubble,status,text){
 
 async function handlePrimaryAction(){
   if(isSubmitting)return;
-  const intent=detectAutoIntent();
+  const intent=forcedTaskMode || detectAutoIntent();
 
   if(intent==="video_analysis"){
     alert("当前后端还没有接入视频内容理解模型。你可以输入“生成视频”把上传的视频作为参考素材，或只上传图片进行识别。");
@@ -960,7 +1026,7 @@ async function sendMessage(){
   renderChatList();
 
   const mode="auto";
-  const thinkingText="正在思考...";
+  const thinkingText=currentChatModel==="doubao"?"Doubao Pro 正在思考...":"正在思考...";
 
   const aiMessage={role:"assistant",content:thinkingText};
   const {bubble:aiBubble}=addMessageToPage("assistant",aiMessage);
@@ -968,10 +1034,14 @@ async function sendMessage(){
   try{
     const payload=image?{
       type:"image",
+      chatModel:currentChatModel,
+      model:currentChatModel,
       message:text || "请描述这张图片，并回答我的问题。",
       image
     }:{
       type:"text",
+      chatModel:currentChatModel,
+      model:currentChatModel,
       mode,
       messages:c.messages.filter(m=>!m.image && m.mediaType!=="video").slice(-20).map(m=>({
         role:m.role==="assistant"?"assistant":"user",
