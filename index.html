@@ -518,15 +518,32 @@ document.getElementById("characterPhotoInput")?.addEventListener("change",async 
   const target=pendingCharacterPhotoTarget;
   pendingCharacterPhotoTarget=null;
   if(!file||!target)return;
-  if(file.size>12*1024*1024){
-    alert("角色照片请控制在12MB以内。");
+  if(file.size>20*1024*1024){
+    alert("角色照片请控制在20MB以内。");
     return;
   }
   try{
-    const image=await compressImage(file);
-    assignImageToCharacter(target.character,image,file.name);
+    target.character.status="generating";
+    saveAll();
+    renderMessages();
+
+    // Safari/HEIC 先通过 Canvas 转为标准 JPEG，再上传 R2。
+    const compressedDataUrl=await compressImage(file);
+    const jpegFile=dataUrlToFile(
+      compressedDataUrl,
+      `${target.character.name||target.character.id||"character"}-${Date.now()}.jpg`
+    );
+    const publicUrl=await uploadCharacterImageFile(jpegFile);
+    assignImageToCharacter(target.character,publicUrl,file.name);
+    target.character.source="uploaded_r2";
+    target.character.status="ready";
+    saveAll();
+    renderMessages();
   }catch(err){
-    alert("角色照片读取失败："+err.message);
+    target.character.status="failed";
+    saveAll();
+    renderMessages();
+    alert("角色照片上传失败："+err.message);
   }
 });
 
@@ -1131,6 +1148,26 @@ function addMessageToPage(role,message={}){
     bubble.appendChild(renderDramaProject(message.dramaProject));
   }
 
+  if(Array.isArray(message.images)&&message.images.length>1){
+    const gallery=document.createElement("div");
+    gallery.style.display="grid";
+    gallery.style.gridTemplateColumns=`repeat(${Math.min(3,message.images.length)},minmax(0,1fr))`;
+    gallery.style.gap="8px";
+    gallery.style.marginTop="10px";
+    message.images.forEach((url,index)=>{
+      const img=document.createElement("img");
+      img.src=url;
+      img.alt=`参考角色${index+1}`;
+      img.style.width="100%";
+      img.style.aspectRatio="1/1";
+      img.style.objectFit="cover";
+      img.style.borderRadius="12px";
+      img.onclick=()=>openMediaViewer(url,"image",`character-${index+1}.jpg`);
+      gallery.appendChild(img);
+    });
+    bubble.appendChild(gallery);
+  }
+
   if(message.image){
     const img=document.createElement("img");
     img.className="msg-img";
@@ -1416,6 +1453,61 @@ function chooseDramaCharacterTarget(){
   if(!Number.isInteger(index)||index<0||index>=choices.length)return null;
   return choices[index];
 }
+
+function dataUrlToFile(dataUrl,filename="character.jpg"){
+  const parts=String(dataUrl||"").split(",");
+  if(parts.length<2)throw new Error("图片数据无效");
+  const mime=(parts[0].match(/data:([^;]+)/)||[])[1]||"image/jpeg";
+  const binary=atob(parts[1]);
+  const bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  return new File([bytes],filename,{type:mime,lastModified:Date.now()});
+}
+
+async function uploadCharacterImageFile(file){
+  const form=new FormData();
+  form.append("file",file,file.name||"character.jpg");
+  const response=await fetch(MEDIA_WORKER_URL.replace(/\/+$/,"")+"/upload",{
+    method:"POST",
+    body:form
+  });
+  let data={};
+  try{data=await response.json()}catch{
+    throw new Error(`角色图片上传接口返回异常，HTTP ${response.status}`);
+  }
+  if(!response.ok||data.ok===false)throw new Error(data.error||`角色图片上传失败，HTTP ${response.status}`);
+  if(!data.url)throw new Error("角色图片上传成功，但没有返回公网URL");
+  return data.url;
+}
+
+async function ensureCharacterImagePublic(character){
+  const value=String(character?.referenceImage||"");
+  if(!value)return "";
+  if(/^https?:\/\//i.test(value))return value;
+  if(/^data:image\//i.test(value)){
+    const file=dataUrlToFile(value,`${character.name||character.id||"character"}.jpg`);
+    const url=await uploadCharacterImageFile(file);
+    character.referenceImage=url;
+    character.source="uploaded_r2";
+    character.status="ready";
+    saveAll();
+    return url;
+  }
+  throw new Error(`${character?.name||"角色"}的参考图片地址无效`);
+}
+
+async function getSceneCharacterReferencesPublic(project,scene){
+  const ids=Array.isArray(scene.characterIds)?scene.characterIds:[];
+  const refs=[];
+  for(const id of ids){
+    const character=getDramaCharacter(project,id);
+    if(!character?.referenceImage)continue;
+    const url=await ensureCharacterImagePublic(character);
+    if(url)refs.push({type:"image",url,characterId:character.id,name:character.name});
+  }
+  return refs;
+}
+
 function assignImageToCharacter(character,imageUrl,name="上传照片"){
   if(!character||!imageUrl)return;
   character.referenceImage=imageUrl;
@@ -1470,7 +1562,7 @@ function renderCharacterLibrary(){
       pendingHistoryTarget.description=item.description;
       pendingHistoryTarget.appearance=item.appearance;
       pendingHistoryTarget.costume=item.costume;
-      assignImageToCharacter(pendingHistoryTarget,item.referenceImage,"历史角色");
+      assignImageToCharacter(pendingHistoryTarget,item.referenceImage,"历史角色");pendingHistoryTarget.source=/^https?:\/\//i.test(item.referenceImage)?"uploaded_r2":"history_local";
       closeCharacterLibrary();
     };
     const remove=document.createElement("button");
@@ -1502,12 +1594,12 @@ function setViewerImageAsCharacter(){
 function getDramaCharacter(project,id){return(project.characters||[]).find(c=>String(c.id)===String(id))}
 function getSceneCharacterReferences(project,scene){return(Array.isArray(scene.characterIds)?scene.characterIds:[]).map(id=>getDramaCharacter(project,id)).filter(c=>c?.referenceImage).map(c=>({type:"image",url:c.referenceImage}))}
 function buildLockedCharacterPrompt(project,scene){const list=(Array.isArray(scene.characterIds)?scene.characterIds:[]).map(id=>getDramaCharacter(project,id)).filter(Boolean).map(c=>`${c.id}（${c.name}）：${c.appearance||c.description||""}；固定服装：${c.costume||""}`);return list.length?`角色一致性锁定：${list.join("。")}。必须与参考图保持同一张脸、同一年龄、同一发型、同一体型和同一服装，不得替换演员，不得改变五官。`:""}
-function renderDramaCharacters(project){const section=document.createElement("div");section.className="drama-character-section";const head=document.createElement("div");head.className="drama-character-head";head.innerHTML='<div><div class="drama-character-title">🎭 角色库</div><div class="drama-character-tip">先生成定妆照，再生成镜头</div></div>';const headActions=document.createElement("div");headActions.className="drama-actions";const history=document.createElement("button");history.className="drama-btn";history.textContent="历史角色库";history.onclick=()=>{const first=(project.characters||[])[0];if(first)openCharacterLibrary(first);else alert("当前没有角色")};const all=document.createElement("button");all.className="drama-btn primary";all.textContent="一键生成全部定妆照";all.onclick=()=>generateAllCharacterReferences(project,all);headActions.append(history,all);head.appendChild(headActions);section.appendChild(head);const grid=document.createElement("div");grid.className="drama-character-grid";(project.characters||[]).forEach(c=>{const card=document.createElement("div");card.className="drama-character-card";const photo=document.createElement("div");photo.className="drama-character-photo";if(c.referenceImage){const img=document.createElement("img");img.src=c.referenceImage;img.alt=c.name;img.onclick=()=>openMediaViewer(c.referenceImage,"image",`${c.name||"character"}.png`);photo.appendChild(img)}else photo.textContent="暂无定妆照";const info=document.createElement("div");info.className="drama-character-info";info.innerHTML=`<div class="drama-character-name">${escapeHtml(c.name||c.id)}</div><div class="drama-character-desc">${escapeHtml([c.description,c.appearance,c.costume].filter(Boolean).join("；"))}</div><div class="drama-character-status">${c.status==="generating"?"正在生成…":c.referenceImage?(c.source==="user_photo"?"已使用自己的照片":"定妆照已锁定"):"尚未生成"}</div>`;const acts=document.createElement("div");acts.className="drama-actions";const upload=document.createElement("button");upload.className="drama-btn primary";upload.textContent="上传自己的照片";upload.onclick=()=>uploadPhotoForCharacter(project,c);const btn=document.createElement("button");btn.className="drama-btn";btn.textContent=c.referenceImage?"AI重新生成":"AI生成定妆照";btn.disabled=c.status==="generating";btn.onclick=()=>generateCharacterReference(project,c,btn);const history=document.createElement("button");history.className="drama-btn";history.textContent="从历史角色选择";history.onclick=()=>openCharacterLibrary(c);const remember=document.createElement("button");remember.className="drama-btn";remember.textContent="保存角色";remember.disabled=!c.referenceImage;remember.onclick=()=>rememberCharacter(c);acts.append(upload,btn,history,remember);info.appendChild(acts);card.append(photo,info);grid.appendChild(card)});if(!(project.characters||[]).length){grid.innerHTML='<div style="font-size:13px;color:#777">未识别到角色，请重新生成大纲。</div>';all.disabled=true}section.appendChild(grid);return section}
-async function generateCharacterReference(project,c,button){button.disabled=true;c.status="generating";saveAll();renderMessages();const prompt=`角色定妆照，${project.style||"电影写实"}风格。固定角色ID：${c.id}。姓名：${c.name}。身份性格：${c.description||""}。固定外貌：${c.appearance||""}。固定服装：${c.costume||""}。单人全身角色设定图，正面站立，五官清晰，简单背景，真实摄影棚灯光，不出现其他人物，适合作为后续100集AI短剧统一人物参考图。`;try{const data=await postJson(MEDIA_WORKER_URL,{type:"generate_image",modelKey:"seedream_5_pro",prompt,size:"2K",watermark:false});if(!data.image)throw new Error(data.error||"没有返回角色图片");c.referenceImage=data.image;c.status="ready";c.lockedAt=Date.now();saveAll();renderMessages()}catch(err){c.status="failed";saveAll();renderMessages();alert(`${c.name||"角色"}定妆照生成失败：${err.message}`)}finally{button.disabled=false}}
+function renderDramaCharacters(project){const section=document.createElement("div");section.className="drama-character-section";const head=document.createElement("div");head.className="drama-character-head";head.innerHTML='<div><div class="drama-character-title">🎭 角色库</div><div class="drama-character-tip">先生成定妆照，再生成镜头</div></div>';const headActions=document.createElement("div");headActions.className="drama-actions";const history=document.createElement("button");history.className="drama-btn";history.textContent="历史角色库";history.onclick=()=>{const first=(project.characters||[])[0];if(first)openCharacterLibrary(first);else alert("当前没有角色")};const all=document.createElement("button");all.className="drama-btn primary";all.textContent="一键生成全部定妆照";all.onclick=()=>generateAllCharacterReferences(project,all);headActions.append(history,all);head.appendChild(headActions);section.appendChild(head);const grid=document.createElement("div");grid.className="drama-character-grid";(project.characters||[]).forEach(c=>{const card=document.createElement("div");card.className="drama-character-card";const photo=document.createElement("div");photo.className="drama-character-photo";if(c.referenceImage){const img=document.createElement("img");img.src=c.referenceImage;img.alt=c.name;img.onclick=()=>openMediaViewer(c.referenceImage,"image",`${c.name||"character"}.png`);photo.appendChild(img)}else photo.textContent="暂无定妆照";const info=document.createElement("div");info.className="drama-character-info";info.innerHTML=`<div class="drama-character-name">${escapeHtml(c.name||c.id)}</div><div class="drama-character-desc">${escapeHtml([c.description,c.appearance,c.costume].filter(Boolean).join("；"))}</div><div class="drama-character-status">${c.status==="generating"?"正在生成…":c.referenceImage?((c.source==="uploaded_r2"||c.source==="user_photo")?"自己的照片已上传云端":"定妆照已锁定"):"尚未生成"}</div>`;const acts=document.createElement("div");acts.className="drama-actions";const upload=document.createElement("button");upload.className="drama-btn primary";upload.textContent="上传自己的照片";upload.onclick=()=>uploadPhotoForCharacter(project,c);const btn=document.createElement("button");btn.className="drama-btn";btn.textContent=c.referenceImage?"AI重新生成":"AI生成定妆照";btn.disabled=c.status==="generating";btn.onclick=()=>generateCharacterReference(project,c,btn);const history=document.createElement("button");history.className="drama-btn";history.textContent="从历史角色选择";history.onclick=()=>openCharacterLibrary(c);const remember=document.createElement("button");remember.className="drama-btn";remember.textContent="保存角色";remember.disabled=!c.referenceImage;remember.onclick=()=>rememberCharacter(c);acts.append(upload,btn,history,remember);info.appendChild(acts);card.append(photo,info);grid.appendChild(card)});if(!(project.characters||[]).length){grid.innerHTML='<div style="font-size:13px;color:#777">未识别到角色，请重新生成大纲。</div>';all.disabled=true}section.appendChild(grid);return section}
+async function generateCharacterReference(project,c,button){button.disabled=true;c.status="generating";saveAll();renderMessages();const prompt=`角色定妆照，${project.style||"电影写实"}风格。固定角色ID：${c.id}。姓名：${c.name}。身份性格：${c.description||""}。固定外貌：${c.appearance||""}。固定服装：${c.costume||""}。单人全身角色设定图，正面站立，五官清晰，简单背景，真实摄影棚灯光，不出现其他人物，适合作为后续100集AI短剧统一人物参考图。`;try{const data=await postJson(MEDIA_WORKER_URL,{type:"generate_image",modelKey:"seedream_5_pro",prompt,size:"2K",watermark:false});if(!data.image)throw new Error(data.error||"没有返回角色图片");c.referenceImage=data.image;if(/^data:image\//i.test(c.referenceImage)){await ensureCharacterImagePublic(c)}c.status="ready";c.lockedAt=Date.now();saveAll();renderMessages()}catch(err){c.status="failed";saveAll();renderMessages();alert(`${c.name||"角色"}定妆照生成失败：${err.message}`)}finally{button.disabled=false}}
 async function generateAllCharacterReferences(project,button){const list=(project.characters||[]).filter(c=>!c.referenceImage);if(!list.length)return alert("全部角色已经有定妆照。");if(!confirm(`将生成${list.length}张角色定妆照，每张都会产生一次图片费用，是否继续？`))return;button.disabled=true;try{for(let i=0;i<list.length;i++){button.textContent=`正在生成${i+1}/${list.length}`;await generateCharacterReference(project,list[i],{disabled:false})}}finally{button.disabled=false;button.textContent="一键生成全部定妆照"}}
 function renderDramaProject(project){const root=document.createElement("div");root.className="drama-project";const summary=document.createElement("div");summary.className="drama-summary";summary.innerHTML=`<div class="drama-project-title">${escapeHtml(project.title)}</div><div>${escapeHtml(project.synopsis)}</div><div style="margin-top:8px;font-size:12px;color:#777">${escapeHtml(project.style)} · ${escapeHtml((project.videoResolution||"720p").toUpperCase())} · ${escapeHtml(project.videoRatio||"9:16")} · ${project.videoFps||24} FPS · 已生成${project.episodes.length}/${project.totalEpisodes||project.episodes.length}集 · 每镜头≤15秒</div>`;root.appendChild(summary);root.appendChild(renderDramaCharacters(project));project.episodes.forEach((ep,ei)=>{const card=document.createElement("div");card.className="drama-episode";const head=document.createElement("div");head.className="drama-episode-head";head.innerHTML=`<div class="drama-episode-name">第${ep.number||ei+1}集：${escapeHtml(ep.title)}</div><div class="drama-hook">${escapeHtml(ep.summary)}${ep.hook?`<br>悬念：${escapeHtml(ep.hook)}`:""}</div>`;card.appendChild(head);const scenes=document.createElement("div");scenes.className="drama-scenes";ep.scenes.forEach((sc,si)=>{const item=document.createElement("div");item.className="drama-scene";const d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("\n");item.innerHTML=`<div class="drama-scene-top"><span class="drama-scene-num">镜头${sc.number||si+1}</span><span class="drama-duration">${sc.duration}秒</span></div><div class="drama-scene-prompt">${escapeHtml(sc.prompt)}</div>${Array.isArray(sc.characterIds)&&sc.characterIds.length?`<div class="drama-scene-characters">角色：${escapeHtml(sc.characterIds.map(id=>getDramaCharacter(project,id)?.name||id).join("、"))}</div>`:""}${d?`<div class="drama-dialogue">${escapeHtml(d)}</div>`:""}`;const a=document.createElement("div");a.className="drama-actions";const use=document.createElement("button");use.className="drama-btn";use.textContent="放入视频生成";use.onclick=()=>useDramaScene(sc,project);a.appendChild(use);item.appendChild(a);scenes.appendChild(item)});card.appendChild(scenes);const ea=document.createElement("div");ea.className="drama-actions";ea.style.padding="0 10px 12px";const all=document.createElement("button");all.className="drama-btn primary";all.textContent="一键提交本集全部镜头";all.onclick=()=>generateDramaEpisode(project,ep,all);ea.appendChild(all);card.appendChild(ea);root.appendChild(card)});return root;}
 function useDramaScene(sc,project){const d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("；");input.value=`${buildLockedCharacterPrompt(project,sc)} ${sc.prompt}${d?`。${d}`:""}`.trim();const refs=getSceneCharacterReferences(project,sc);if(refs[0]){selectedImageBase64=refs[0].url;selectedImageName="角色定妆照";previewImg.src=refs[0].url;previewName.textContent="角色定妆照";preview.style.display="flex"}videoDuration.value=String(sc.duration);if(document.getElementById("videoFps"))document.getElementById("videoFps").value=String(document.getElementById("dramaVideoFps")?.value||24);forcedTaskMode="video";taskMode.value="video";updateModeUI();input.focus();input.dispatchEvent(new Event("input"));window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});}
-async function generateDramaEpisode(project,ep,button){if(!isMediaWorkerConfigured())return;const missing=(project.characters||[]).filter(c=>!c.referenceImage);if(missing.length&&!confirm(`还有${missing.length}个角色没有定妆照，继续生成可能导致人物变化。\n建议先生成全部定妆照。\n\n仍然继续吗？`))return;if(!confirm(`将提交第${ep.number}集的${ep.scenes.length}个镜头，每个镜头都会产生视频费用，是否继续？`))return;button.disabled=true;const c=getCurrent();try{for(let i=0;i<ep.scenes.length;i++){const sc=ep.scenes[i],d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("；"),locked=buildLockedCharacterPrompt(project,sc),prompt=`短剧《${project.title}》第${ep.number}集镜头${sc.number}。${locked} ${sc.prompt}${d?`。${d}`:""}`.trim(),sceneReferences=getSceneCharacterReferences(project,sc);const um={role:"user",content:`第${ep.number}集·镜头${sc.number}（${sc.duration}秒）\n${prompt}`,image:sceneReferences[0]?.url||null};c.messages.push(um);addMessageToPage("user",um);const am={role:"assistant",content:"视频任务正在创建...",mediaType:"video",status:"creating",startedAt:Date.now(),statusText:"正在创建短剧镜头..."},idx=c.messages.length;c.messages.push(am);const {bubble}=addMessageToPage("assistant",am);appendVideoStatus(bubble,"creating",am.statusText);saveAll();try{const data=await postJson(MEDIA_WORKER_URL,{type:"create_video",modelKey:"seedance_20",prompt,resolution:project.videoResolution||document.getElementById("dramaVideoResolution")?.value||videoResolution?.value||"720p",ratio:project.videoRatio||document.getElementById("dramaVideoRatio")?.value||videoRatio?.value||"9:16",duration:Math.min(15,Math.max(4,Number(sc.duration)||10)),fps:Number(project.videoFps||document.getElementById("dramaVideoFps")?.value||24),generateAudio:project.generateAudio!==false,watermark:project.watermark===true,references:sceneReferences});if(!data.taskId)throw new Error(data.error||"没有返回任务ID");am.taskId=data.taskId;am.status=data.status||"queued";am.statusText="短剧镜头已提交，正在生成...";saveAll();appendVideoStatus(bubble,am.status,am.statusText);pollVideoTask(data.taskId,bubble,c,idx)}catch(err){am.status="failed";am.content="镜头生成失败："+err.message;am.statusText=am.content;appendVideoStatus(bubble,"failed",am.statusText);saveAll()}button.textContent=`已提交${i+1}/${ep.scenes.length}`;await new Promise(r=>setTimeout(r,450))}button.textContent="本集镜头已全部提交"}finally{setTimeout(()=>{button.disabled=false;button.textContent="一键提交本集全部镜头"},1800)}}
+async function generateDramaEpisode(project,ep,button){if(!isMediaWorkerConfigured())return;const missing=(project.characters||[]).filter(c=>!c.referenceImage);if(missing.length&&!confirm(`还有${missing.length}个角色没有定妆照，继续生成可能导致人物变化。\n建议先生成全部定妆照。\n\n仍然继续吗？`))return;if(!confirm(`将提交第${ep.number}集的${ep.scenes.length}个镜头，每个镜头都会产生视频费用，是否继续？`))return;button.disabled=true;const c=getCurrent();try{for(let i=0;i<ep.scenes.length;i++){const sc=ep.scenes[i],d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("；"),locked=buildLockedCharacterPrompt(project,sc),prompt=`短剧《${project.title}》第${ep.number}集镜头${sc.number}。${locked} ${sc.prompt}${d?`。${d}`:""}`.trim(),sceneReferences=await getSceneCharacterReferencesPublic(project,sc);const um={role:"user",content:`第${ep.number}集·镜头${sc.number}（${sc.duration}秒）\n${prompt}\n参考角色：${sceneReferences.length?sceneReferences.map(r=>r.name||r.characterId).join("、"):"无"}`,image:sceneReferences[0]?.url||null,images:sceneReferences.map(r=>r.url)};c.messages.push(um);addMessageToPage("user",um);const am={role:"assistant",content:"视频任务正在创建...",mediaType:"video",status:"creating",startedAt:Date.now(),statusText:"正在创建短剧镜头..."},idx=c.messages.length;c.messages.push(am);const {bubble}=addMessageToPage("assistant",am);appendVideoStatus(bubble,"creating",am.statusText);saveAll();try{const data=await postJson(MEDIA_WORKER_URL,{type:"create_video",modelKey:"seedance_20",prompt,resolution:project.videoResolution||document.getElementById("dramaVideoResolution")?.value||videoResolution?.value||"720p",ratio:project.videoRatio||document.getElementById("dramaVideoRatio")?.value||videoRatio?.value||"9:16",duration:Math.min(15,Math.max(4,Number(sc.duration)||10)),fps:Number(project.videoFps||document.getElementById("dramaVideoFps")?.value||24),generateAudio:project.generateAudio!==false,watermark:project.watermark===true,references:sceneReferences});if(!data.taskId)throw new Error(data.error||"没有返回任务ID");am.taskId=data.taskId;am.status=data.status||"queued";am.statusText="短剧镜头已提交，正在生成...";saveAll();appendVideoStatus(bubble,am.status,am.statusText);pollVideoTask(data.taskId,bubble,c,idx)}catch(err){am.status="failed";am.content="镜头生成失败："+err.message;am.statusText=am.content;appendVideoStatus(bubble,"failed",am.statusText);saveAll()}button.textContent=`已提交${i+1}/${ep.scenes.length}`;await new Promise(r=>setTimeout(r,450))}button.textContent="本集镜头已全部提交"}finally{setTimeout(()=>{button.disabled=false;button.textContent="一键提交本集全部镜头"},1800)}}
 
 function resetComposerAfterSubmit(){
   selectedVideoFiles=[];
