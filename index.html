@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Jerry AI</title>
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape" && isMessageSelectionMode)cancelMessageSelection();
+});
+
+</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
 <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
 
@@ -55,6 +60,30 @@ select{background:#fff;color:#111;border:1px solid #ddd;border-radius:10px;paddi
 .actions{display:flex;gap:12px;margin-top:7px;flex-wrap:wrap}
 .action-btn{background:none;border:none;color:#666;font-size:13px;cursor:pointer;padding:0}
 .action-btn:hover{color:#111}
+.message-menu-mask{position:fixed;inset:0;background:rgba(0,0,0,.18);z-index:120;display:none;align-items:flex-end;justify-content:center;padding:14px}
+.message-menu-mask.show{display:flex}
+.message-menu{width:min(440px,100%);background:#fff;border-radius:20px;padding:8px;box-shadow:0 18px 60px rgba(0,0,0,.2)}
+.message-menu button{width:100%;border:0;background:transparent;border-radius:13px;padding:13px 14px;text-align:left;font-size:16px;cursor:pointer;color:#222}
+.message-menu button:hover{background:#f4f4f4}
+.message-menu .danger{color:#c62828}
+.message-menu .cancel{margin-top:4px;background:#f4f4f4;text-align:center}
+.message-select-toolbar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:125;display:none;align-items:center;gap:10px;width:min(620px,calc(100% - 24px));padding:10px 12px;background:rgba(20,20,20,.96);color:#fff;border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.message-select-toolbar.show{display:flex}
+.message-select-count{flex:1;font-size:14px;padding-left:4px}
+.message-select-btn{border:0;border-radius:12px;padding:9px 13px;background:#333;color:#fff;cursor:pointer;white-space:nowrap}
+.message-select-btn.danger{background:#d92d20}
+.message-select-btn.cancel{background:#555}
+.message.selecting{cursor:pointer}
+.message.selected .content{position:relative}
+.message.selected .content::before{content:"✓";position:absolute;left:-34px;top:8px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#111;color:#fff;font-size:14px;font-weight:700}
+.user.message.selected .content::before{left:auto;right:-34px}
+.message.selected .bubble{outline:2px solid #111;outline-offset:4px;border-radius:14px}
+@media(max-width:760px){
+  .message-select-toolbar{bottom:92px}
+  .message.selected .content::before{left:0;top:-18px}
+  .user.message.selected .content::before{left:auto;right:0}
+}
+.long-press-tip{font-size:12px;color:#999;margin-top:6px}
 .input-area{position:fixed;left:260px;right:0;bottom:0;background:linear-gradient(transparent,#fff 17%);padding:30px 16px 18px;max-width:100vw;overflow-x:hidden}
 .mode-settings{max-width:850px;margin:0 auto 9px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff}
 .attachment-mode-switch{max-width:850px;margin:0 auto 9px;display:none;align-items:center;gap:8px;flex-wrap:wrap}.attachment-mode-switch.show{display:flex}.attachment-mode-label{font-size:13px;color:#777}.attachment-mode-tabs{display:flex;border:1px solid #ddd;border-radius:12px;padding:3px;background:#f7f7f8}.attachment-mode-tab{border:0;background:transparent;border-radius:9px;padding:7px 13px;font-size:13px;cursor:pointer;color:#555}.attachment-mode-tab.active{background:#111;color:#fff}.setting-divider{width:1px;height:24px;background:#ddd;margin:0 2px}
@@ -319,6 +348,22 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 </div>
 
 
+<div id="messageMenuMask" class="message-menu-mask" onclick="closeMessageMenu(event)">
+  <div class="message-menu" onclick="event.stopPropagation()">
+    <button type="button" onclick="copySelectedMessage()">复制文字</button>
+    <button type="button" onclick="startMessageSelection()">选择消息</button>
+    <button type="button" class="danger" onclick="deleteSelectedMessage()">删除这条消息</button>
+    <button type="button" class="cancel" onclick="closeMessageMenu()">取消</button>
+  </div>
+</div>
+
+<div id="messageSelectToolbar" class="message-select-toolbar">
+  <div id="messageSelectCount" class="message-select-count">已选择 0 条</div>
+  <button type="button" class="message-select-btn" onclick="selectAllMessages()">全选</button>
+  <button type="button" class="message-select-btn danger" onclick="deleteSelectedMessages()">删除</button>
+  <button type="button" class="message-select-btn cancel" onclick="cancelMessageSelection()">取消</button>
+</div>
+
 <div id="mediaViewer" class="media-viewer" aria-hidden="true">
   <div class="viewer-top">
     <button class="viewer-close" onclick="closeMediaViewer()">✕</button>
@@ -403,6 +448,10 @@ let isSubmitting = false;
 let forcedTaskMode = null;
 let currentChatModel = localStorage.getItem("jerry_chat_model") || "gpt6";
 const activeVideoPolls = new Set();
+let selectedMenuMessage=null;
+let messageLongPressTimer=null;
+let isMessageSelectionMode=false;
+const selectedMessages=new Set();
 
 if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 
@@ -807,6 +856,7 @@ function createConversation(){
 }
 
 function newChat(){
+  cancelMessageSelection();
   createConversation();
   renderChatList();
   renderMessages();
@@ -833,6 +883,7 @@ function renderChatList(){
     title.className="chat-title";
     title.textContent=c.title;
     title.onclick=()=>{
+      cancelMessageSelection();
       currentId=c.id;
       saveAll();
       renderChatList();
@@ -852,6 +903,139 @@ function renderChatList(){
   });
 }
 
+function bindMessageLongPress(element,message){
+  let startX=0,startY=0;
+  const isInteractive=target=>Boolean(target?.closest?.("img,video,button,a,input,textarea,select"));
+  const cancel=()=>{
+    if(messageLongPressTimer){clearTimeout(messageLongPressTimer);messageLongPressTimer=null;}
+  };
+  element.addEventListener("touchstart",event=>{
+    if(isInteractive(event.target))return;
+    const touch=event.touches?.[0];
+    startX=touch?.clientX || 0;startY=touch?.clientY || 0;
+    cancel();
+    messageLongPressTimer=setTimeout(()=>{
+      if(navigator.vibrate)navigator.vibrate(20);
+      if(isMessageSelectionMode)toggleMessageSelection(message);
+      else openMessageMenu(message);
+    },520);
+  },{passive:true});
+  element.addEventListener("touchmove",event=>{
+    const touch=event.touches?.[0];
+    if(!touch)return;
+    if(Math.abs(touch.clientX-startX)>10 || Math.abs(touch.clientY-startY)>10)cancel();
+  },{passive:true});
+  element.addEventListener("touchend",cancel,{passive:true});
+  element.addEventListener("touchcancel",cancel,{passive:true});
+  element.addEventListener("contextmenu",event=>{
+    if(isInteractive(event.target))return;
+    event.preventDefault();
+    if(isMessageSelectionMode)toggleMessageSelection(message);
+    else openMessageMenu(message);
+  });
+  element.addEventListener("click",event=>{
+    if(!isMessageSelectionMode || isInteractive(event.target))return;
+    event.preventDefault();
+    event.stopPropagation();
+    toggleMessageSelection(message);
+  });
+}
+
+function openMessageMenu(message){
+  selectedMenuMessage=message;
+  document.getElementById("messageMenuMask")?.classList.add("show");
+}
+
+function closeMessageMenu(event){
+  if(event && event.target!==event.currentTarget)return;
+  document.getElementById("messageMenuMask")?.classList.remove("show");
+  selectedMenuMessage=null;
+}
+
+function startMessageSelection(){
+  const message=selectedMenuMessage;
+  closeMessageMenu();
+  isMessageSelectionMode=true;
+  selectedMessages.clear();
+  if(message)selectedMessages.add(message);
+  refreshMessageSelectionUI();
+}
+
+function toggleMessageSelection(message){
+  if(!isMessageSelectionMode || !message)return;
+  if(selectedMessages.has(message))selectedMessages.delete(message);
+  else selectedMessages.add(message);
+  refreshMessageSelectionUI();
+}
+
+function refreshMessageSelectionUI(){
+  const toolbar=document.getElementById("messageSelectToolbar");
+  const count=document.getElementById("messageSelectCount");
+  toolbar?.classList.toggle("show",isMessageSelectionMode);
+  if(count)count.textContent=`已选择 ${selectedMessages.size} 条`;
+
+  document.querySelectorAll(".message").forEach(element=>{
+    const message=element.__messageRef;
+    element.classList.toggle("selecting",isMessageSelectionMode);
+    element.classList.toggle("selected",Boolean(message && selectedMessages.has(message)));
+  });
+}
+
+function selectAllMessages(){
+  const c=getCurrent();
+  if(!c)return;
+  selectedMessages.clear();
+  c.messages.forEach(message=>selectedMessages.add(message));
+  refreshMessageSelectionUI();
+}
+
+function cancelMessageSelection(){
+  isMessageSelectionMode=false;
+  selectedMessages.clear();
+  refreshMessageSelectionUI();
+}
+
+function deleteSelectedMessages(){
+  const c=getCurrent();
+  if(!c || selectedMessages.size===0)return;
+
+  const count=selectedMessages.size;
+  if(!confirm(`确定删除选中的 ${count} 条消息吗？`))return;
+
+  c.messages=c.messages.filter(message=>!selectedMessages.has(message));
+  if(c.messages.length===0)c.title="新聊天";
+  saveAll();
+  renderChatList();
+  cancelMessageSelection();
+  renderMessages();
+}
+
+
+async function copySelectedMessage(){
+  const message=selectedMenuMessage;
+  if(!message)return closeMessageMenu();
+  const text=String(message.content || "").trim();
+  try{
+    await navigator.clipboard.writeText(text);
+  }catch{
+    const temp=document.createElement("textarea");
+    temp.value=text;temp.style.position="fixed";temp.style.opacity="0";
+    document.body.appendChild(temp);temp.select();document.execCommand("copy");temp.remove();
+  }
+  closeMessageMenu();
+}
+
+function deleteSelectedMessage(){
+  const message=selectedMenuMessage;
+  const c=getCurrent();
+  if(!message || !c)return closeMessageMenu();
+  const index=c.messages.indexOf(message);
+  if(index<0)return closeMessageMenu();
+  c.messages.splice(index,1);
+  if(c.messages.length===0)c.title="新聊天";
+  saveAll();renderChatList();renderMessages();closeMessageMenu();
+}
+
 function renderMessages(){
   chat.innerHTML="";
   const c=getCurrent();
@@ -868,12 +1052,16 @@ function renderMessages(){
       pollVideoTask(message.taskId,rendered.bubble,c,index);
     }
   });
+  refreshMessageSelectionUI();
 }
 
 function addMessageToPage(role,message={}){
   welcome.style.display="none";
   const msg=document.createElement("div");
   msg.className="message "+(role==="user"?"user":"ai");
+  msg.__messageRef=message;
+  if(isMessageSelectionMode)msg.classList.add("selecting");
+  if(selectedMessages.has(message))msg.classList.add("selected");
 
   const content=document.createElement("div");
   content.className="content";
@@ -901,12 +1089,6 @@ function addMessageToPage(role,message={}){
 
   const actions=document.createElement("div");
   actions.className="actions";
-
-  const copy=document.createElement("button");
-  copy.className="action-btn";
-  copy.textContent="复制";
-  copy.onclick=()=>navigator.clipboard.writeText(message.content || bubble.innerText || "");
-  actions.appendChild(copy);
 
   if(message.image){
     const open=document.createElement("button");
@@ -938,8 +1120,9 @@ function addMessageToPage(role,message={}){
     actions.appendChild(voice);
   }
 
+  bindMessageLongPress(bubble,message);
   content.appendChild(bubble);
-  content.appendChild(actions);
+  if(actions.childElementCount)content.appendChild(actions);
   msg.appendChild(content);
   chat.appendChild(msg);
   chat.scrollTop=chat.scrollHeight;
@@ -1084,6 +1267,8 @@ async function generateImage(){
   };
   c.messages.push(userMessage);
   addMessageToPage("user",userMessage);
+  closeMediaViewer();
+  closeMessageMenu();
 
   input.value="";
   input.style.height="auto";
@@ -1147,6 +1332,10 @@ async function generateVideo(){
     alert(err.message);
     return;
   }
+  const hasLocalImage=localFiles.some(file=>getFileMediaType(file)==="image");
+  if(selectedImageBase64 && !hasLocalImage){
+    urlReferences.unshift({type:"image",url:selectedImageBase64});
+  }
   if(localFiles.length + urlReferences.length > 12){
     alert("参考素材总数最多 12 个，请减少后再提交。");
     return;
@@ -1168,6 +1357,8 @@ async function generateVideo(){
   };
   c.messages.push(userMessage);
   addMessageToPage("user",userMessage);
+  closeMediaViewer();
+  closeMessageMenu();
 
   input.value="";
   input.style.height="auto";
@@ -1233,6 +1424,8 @@ async function generateVideo(){
     saveAll();
     appendVideoStatus(bubble,aiMessage.status,aiMessage.statusText);
     clearVideoReferences();
+    clearImage();
+    closeMediaViewer();
     pollVideoTask(data.taskId,bubble,c,aiIndex);
   }catch(err){
     aiMessage.status="failed";
@@ -1600,23 +1793,27 @@ function useViewerAsImage(){
   selectedImageName=viewerMedia.filename || "reference-image";
   previewImg.src=viewerMedia.url;
   previewName.textContent=selectedImageName;
+  previewRole.textContent="已引用这张图片，将用于再次生成或编辑";
+  forcedTaskMode="image";
   taskMode.value="image";
   updateModeUI();
   closeMediaViewer();
-  input.placeholder="描述要如何修改或生成图片…";
+  input.placeholder="描述要如何基于这张图片再次生成…";
   input.focus();
 }
 
 function useViewerAsVideo(){
   if(!viewerMedia.url || viewerMedia.type!=="image")return;
-  const current=String(videoImageUrls.value || "").trim();
-  if(!current.split(/\r?\n/).includes(viewerMedia.url)){
-    videoImageUrls.value=current ? current+"\n"+viewerMedia.url : viewerMedia.url;
-  }
+  selectedImageBase64=viewerMedia.url;
+  selectedImageName=viewerMedia.filename || "reference-image";
+  previewImg.src=viewerMedia.url;
+  previewName.textContent=selectedImageName;
+  previewRole.textContent="已引用这张图片，将作为图生视频参考图";
+  forcedTaskMode="video";
   taskMode.value="video";
   updateModeUI();
   closeMediaViewer();
-  input.placeholder="描述如何让这张图片生成视频…";
+  input.placeholder="描述如何让这张图片动起来…";
   input.focus();
 }
 
@@ -1625,25 +1822,54 @@ async function saveViewerMedia(){
 }
 
 async function downloadFileDirect(url,filename,type="file"){
+  const safeName=filename || (type==="video"?"jerry-ai-video.mp4":"jerry-ai-image.png");
+
   try{
-    const response=await fetch(url,{mode:"cors",credentials:"omit"});
-    if(!response.ok)throw new Error("HTTP "+response.status);
+    // 优先直接读取媒体；若第三方地址不允许跨域，再自动改走后端下载代理。
+    let response;
+    try{
+      response=await fetch(url,{mode:"cors",credentials:"omit"});
+      if(!response.ok)throw new Error("HTTP "+response.status);
+    }catch{
+      const proxyUrl=buildDownloadProxyUrl(url,safeName,"attachment");
+      response=await fetch(proxyUrl,{mode:"cors",credentials:"omit"});
+      if(!response.ok)throw new Error("HTTP "+response.status);
+    }
+
     const blob=await response.blob();
-    const safeName=filename || (type==="video"?"jerry-ai-video.mp4":"jerry-ai-image.png");
-    const file=new File([blob],safeName,{type:blob.type || (type==="video"?"video/mp4":"image/png")});
+    const mime=blob.type || (type==="video"?"video/mp4":"image/png");
+    const file=new File([blob],safeName,{type:mime});
+
+    // iPhone/iPad/Android 支持时优先打开系统分享菜单，可保存到“文件”或相册。
     if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({files:[file],title:safeName});
       return;
     }
+
+    // 电脑及不支持文件分享的浏览器直接下载。
     const objectUrl=URL.createObjectURL(blob);
     triggerDownload(objectUrl,safeName);
-    setTimeout(()=>URL.revokeObjectURL(objectUrl),10000);
+    setTimeout(()=>URL.revokeObjectURL(objectUrl),15000);
   }catch(error){
     if(error && error.name==="AbortError")return;
-    // 跨域资源若不允许前端读取，直接打开原始媒体，用户可长按保存。
-    openMediaViewer(url,type,filename);
-    alert("当前媒体服务器不允许浏览器直接下载，请在全屏页面长按媒体保存。");
+
+    // 最后兜底：直接访问后端 attachment 地址，让浏览器执行下载。
+    const proxyUrl=buildDownloadProxyUrl(url,safeName,"attachment");
+    const a=document.createElement("a");
+    a.href=proxyUrl;
+    a.download=safeName;
+    a.rel="noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
+}
+
+function buildDownloadProxyUrl(url,filename,mode="attachment"){
+  const base=WORKER_URL.replace(/\/+$/,"");
+  return base+"/download?url="+encodeURIComponent(url)+
+    "&filename="+encodeURIComponent(filename)+
+    "&mode="+encodeURIComponent(mode);
 }
 
 function triggerDownload(url,filename){
