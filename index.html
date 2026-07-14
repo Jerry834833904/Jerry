@@ -194,9 +194,22 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 .model-check{width:18px;text-align:center}
 @media(max-width:760px){.model-switch-btn{font-size:20px}.model-menu{top:46px}}
 
-.formal-menu-btn{position:fixed;right:18px;top:76px;z-index:55;border:1px solid #ddd;background:#fff;border-radius:999px;padding:10px 15px;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.12)}
-.formal-drawer{position:fixed;inset:0;z-index:160;background:rgba(0,0,0,.35);display:none}.formal-drawer.show{display:block}.formal-drawer-panel{position:absolute;right:0;top:0;bottom:0;width:min(340px,88vw);background:#fff;padding:22px;overflow:auto}.formal-drawer-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.formal-drawer-title{font-size:22px;font-weight:800}.formal-menu-item{width:100%;border:0;background:#f4f4f4;border-radius:14px;padding:14px;text-align:left;margin:6px 0;font-size:15px}.formal-page{display:none;position:fixed;inset:0;z-index:150;background:#f7f7f8;overflow:auto}.formal-page.show{display:block}.formal-page-header{position:sticky;top:0;background:#fff;border-bottom:1px solid #ddd;padding:14px 18px;display:flex;align-items:center;gap:12px}.formal-back{border:0;background:#111;color:#fff;border-radius:999px;padding:9px 14px}.formal-page-body{max-width:1000px;margin:0 auto;padding:24px 16px 90px}.formal-title{font-size:28px;font-weight:800}.formal-sub{color:#777;margin-top:5px}.formal-card{background:#fff;border:1px solid #e3e3e3;border-radius:18px;padding:18px;margin-top:16px}.formal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.formal-stat{font-size:28px;font-weight:800}.formal-btn{border:0;background:#111;color:#fff;border-radius:12px;padding:11px 15px;font-weight:700}.formal-btn.secondary{background:#fff;color:#111;border:1px solid #ddd}.formal-field{display:flex;flex-direction:column;gap:6px;margin:12px 0}.formal-field input{border:1px solid #ddd;border-radius:12px;padding:12px}.formal-table{width:100%;border-collapse:collapse}.formal-table th,.formal-table td{padding:12px;border-bottom:1px solid #eee;text-align:left;font-size:13px}.formal-auth{position:fixed;inset:0;z-index:180;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px}.formal-auth.show{display:flex}.formal-auth-card{width:min(420px,100%);background:#fff;border-radius:22px;padding:22px}.formal-tabs{display:flex;background:#eee;border-radius:12px;padding:4px}.formal-tab{flex:1;border:0;background:transparent;padding:10px;border-radius:9px}.formal-tab.active{background:#fff;font-weight:700}.formal-pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.formal-pay-option{border:1px solid #ddd;border-radius:12px;padding:12px;text-align:center}.formal-pay-option.active{border-color:#111;background:#f0f0f0}.formal-qr{width:220px;height:220px;margin:18px auto;border:1px dashed #999;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px}.formal-userbar{position:fixed;right:18px;top:18px;z-index:56;display:flex;gap:8px}.formal-pill{border:1px solid #ddd;background:#fff;border-radius:999px;padding:8px 12px}.formal-work-grid,.formal-char-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.formal-work,.formal-char{background:#fff;border:1px solid #ddd;border-radius:14px;overflow:hidden}.formal-work img,.formal-work video,.formal-char img{width:100%;aspect-ratio:1/1;object-fit:cover}.formal-info{padding:10px}
-@media(max-width:700px){.formal-grid{grid-template-columns:1fr}.formal-work-grid,.formal-char-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.formal-menu-btn{top:70px}.formal-userbar{right:10px;top:10px}.formal-pill{font-size:12px;padding:6px 9px}}
+/* v28 正式登录版：保持原界面 */
+.formal-function-btn{position:absolute;right:14px;border:1px solid #ddd;background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer;font-size:13px}
+.formal-menu{position:absolute;right:14px;top:51px;width:210px;background:#fff;border:1px solid #ddd;border-radius:15px;box-shadow:0 14px 45px rgba(0,0,0,.15);padding:7px;display:none;z-index:80}
+.formal-menu.show{display:block}.formal-menu button{width:100%;border:0;background:transparent;padding:11px 12px;text-align:left;border-radius:10px;cursor:pointer;font-size:14px}.formal-menu button:hover{background:#f1f1f1}
+.formal-menu-divider{height:1px;background:#eee;margin:6px}
+.formal-page{position:fixed;inset:0;background:#fff;z-index:100;display:none;overflow:auto}.formal-page.show{display:block}
+.formal-page-header{height:62px;border-bottom:1px solid #ddd;display:flex;align-items:center;gap:12px;padding:0 18px;position:sticky;top:0;background:#fff;z-index:2}
+.formal-back{border:0;background:#f1f1f1;border-radius:999px;padding:9px 14px;cursor:pointer}.formal-page-title{font-size:20px;font-weight:750}
+.formal-page-body{max-width:760px;margin:0 auto;padding:26px 18px}.formal-card{border:1px solid #e3e3e3;border-radius:18px;padding:18px;background:#fff;margin-bottom:14px}
+.formal-field{display:flex;flex-direction:column;gap:6px;margin:12px 0}.formal-field input{border:1px solid #d8d8d8;border-radius:12px;padding:12px;font:inherit}
+.formal-primary{border:0;background:#111;color:#fff;border-radius:13px;padding:12px 17px;cursor:pointer;font-weight:700}.formal-secondary{border:1px solid #ddd;background:#fff;border-radius:13px;padding:11px 16px;cursor:pointer}
+.formal-tabs{display:flex;gap:8px;margin-bottom:16px}.formal-tab{flex:1;border:1px solid #ddd;background:#fff;border-radius:12px;padding:10px;cursor:pointer}.formal-tab.active{background:#111;color:#fff;border-color:#111}
+.formal-account-line{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #eee}.formal-money{font-size:34px;font-weight:800}
+.formal-empty{color:#777;text-align:center;padding:30px 10px}.formal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.formal-item{border:1px solid #e4e4e4;border-radius:15px;overflow:hidden}.formal-item img,.formal-item video{width:100%;aspect-ratio:1/1;object-fit:cover;background:#eee}.formal-item-info{padding:10px;font-size:13px}
+@media(max-width:640px){.formal-function-btn{right:8px;padding:6px 9px}.formal-menu{right:8px}.formal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 </style>
 </head>
@@ -236,6 +249,17 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
       </div>
 
       <div class="header-spacer"></div>
+      <button id="formalFunctionBtn" class="formal-function-btn" onclick="toggleFormalMenu(event)">功能</button>
+      <div id="formalMenu" class="formal-menu">
+        <button onclick="openFormalPage('account')">👤 登录 / 注册</button>
+        <button onclick="openFormalPage('wallet')">💰 我的钱包</button>
+        <button onclick="openFormalPage('characters')">🎭 人物库</button>
+        <button onclick="openFormalPage('works')">📁 我的作品</button>
+        <button onclick="openFormalPage('records')">📜 消费记录</button>
+        <button onclick="openFormalPage('settings')">⚙️ 设置</button>
+        <div class="formal-menu-divider"></div>
+        <button id="formalLogoutBtn" onclick="formalLogout()" style="display:none">退出登录</button>
+      </div>
     </div>
 
     <div id="chat" class="chat">
@@ -377,19 +401,53 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 
 
 
-<button class="formal-menu-btn" onclick="openFormalMenu()">☰ 功能</button>
-<div class="formal-userbar"><button id="formalBalancePill" class="formal-pill" onclick="openFormalPage('wallet')">¥0.00</button><button id="formalLoginPill" class="formal-pill" onclick="openFormalAuth()">登录</button></div>
-<div id="formalDrawer" class="formal-drawer" onclick="closeFormalMenu(event)"><div class="formal-drawer-panel" onclick="event.stopPropagation()"><div class="formal-drawer-head"><div class="formal-drawer-title">Jerry AI</div><button class="formal-btn secondary" onclick="closeFormalMenu()">关闭</button></div><button class="formal-menu-item" onclick="goFormalHome()">🏠 返回主页</button><button class="formal-menu-item" onclick="openFormalPage('characters')">🎭 人物库</button><button class="formal-menu-item" onclick="openFormalPage('works')">📁 我的作品</button><button class="formal-menu-item" onclick="openFormalPage('wallet')">💰 钱包充值</button><button class="formal-menu-item" onclick="openFormalPage('transactions')">📜 消费记录</button><button class="formal-menu-item" onclick="openFormalPage('profile')">👤 个人中心</button><button id="formalAdminMenu" class="formal-menu-item" style="display:none" onclick="openFormalPage('admin')">👑 管理后台</button></div></div>
+<div id="formalPageAccount" class="formal-page">
+  <div class="formal-page-header"><button class="formal-back" onclick="closeFormalPage()">← 返回主页</button><div class="formal-page-title">账户</div></div>
+  <div class="formal-page-body">
+    <div id="formalLoggedOut">
+      <div class="formal-tabs"><button id="formalLoginTab" class="formal-tab active" onclick="switchFormalAuth('login')">登录</button><button id="formalRegisterTab" class="formal-tab" onclick="switchFormalAuth('register')">注册</button></div>
+      <div class="formal-card">
+        <div class="formal-field"><label>邮箱</label><input id="formalEmail" type="email" placeholder="请输入邮箱"></div>
+        <div id="formalNameRow" class="formal-field" style="display:none"><label>昵称</label><input id="formalName" placeholder="请输入昵称"></div>
+        <div class="formal-field"><label>密码</label><input id="formalPassword" type="password" placeholder="至少8位"></div>
+        <button id="formalAuthSubmit" class="formal-primary" onclick="submitFormalAuth()">登录</button>
+      </div>
+    </div>
+    <div id="formalLoggedIn" style="display:none">
+      <div class="formal-card">
+        <div class="formal-account-line"><span>昵称</span><b id="formalUserName">-</b></div>
+        <div class="formal-account-line"><span>邮箱</span><b id="formalUserEmail">-</b></div>
+        <div class="formal-account-line"><span>账户类型</span><b id="formalUserRole">user</b></div>
+        <button class="formal-secondary" style="margin-top:16px" onclick="formalLogout()">退出登录</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-<div id="formalPageCharacters" class="formal-page"><div class="formal-page-header"><button class="formal-back" onclick="goFormalHome()">← 返回主页</button><b>人物库</b></div><div class="formal-page-body"><div class="formal-title">人物库</div><div class="formal-sub">查看和复用历史角色。</div><div id="formalCharacters" class="formal-char-grid" style="margin-top:18px"></div></div></div>
-<div id="formalPageWorks" class="formal-page"><div class="formal-page-header"><button class="formal-back" onclick="goFormalHome()">← 返回主页</button><b>我的作品</b></div><div class="formal-page-body"><div class="formal-title">我的作品</div><div id="formalWorks" class="formal-work-grid" style="margin-top:18px"></div></div></div>
-<div id="formalPageWallet" class="formal-page"><div class="formal-page-header"><button class="formal-back" onclick="goFormalHome()">← 返回主页</button><b>钱包</b></div><div class="formal-page-body"><div class="formal-title">钱包充值</div><div class="formal-grid"><div class="formal-card"><div>可用余额</div><div id="formalWalletBalance" class="formal-stat">¥0.00</div><button class="formal-btn" onclick="openRechargePanel()">立即充值</button></div><div class="formal-card"><div>本月消费</div><div id="formalMonthSpend" class="formal-stat">¥0.00</div></div><div class="formal-card">视频售价 = 模型实际成本 + ¥1.00</div></div></div></div>
-<div id="formalPageTransactions" class="formal-page"><div class="formal-page-header"><button class="formal-back" onclick="goFormalHome()">← 返回主页</button><b>消费记录</b></div><div class="formal-page-body"><table class="formal-table"><thead><tr><th>时间</th><th>类型</th><th>说明</th><th>金额</th></tr></thead><tbody id="formalTxRows"></tbody></table></div></div>
-<div id="formalPageProfile" class="formal-page"><div class="formal-page-header"><button class="formal-back" onclick="goFormalHome()">← 返回主页</button><b>个人中心</b></div><div class="formal-page-body"><div class="formal-card"><div id="formalProfileText">未登录</div><button class="formal-btn" onclick="openFormalAuth()">登录 / 注册</button></div></div></div>
-<div id="formalPageAdmin" class="formal-page"><div class="formal-page-header"><button class="formal-back" onclick="goFormalHome()">← 返回主页</button><b>管理后台</b></div><div class="formal-page-body"><div class="formal-grid"><div class="formal-card">用户数<div id="adminUsers" class="formal-stat">0</div></div><div class="formal-card">充值总额<div id="adminRecharge" class="formal-stat">¥0</div></div><div class="formal-card">消费总额<div id="adminSpend" class="formal-stat">¥0</div></div></div></div></div>
+<div id="formalPageWallet" class="formal-page">
+  <div class="formal-page-header"><button class="formal-back" onclick="closeFormalPage()">← 返回主页</button><div class="formal-page-title">我的钱包</div></div>
+  <div class="formal-page-body"><div class="formal-card"><div>可用余额</div><div id="formalBalance" class="formal-money">¥0.00</div><p style="color:#777">支付宝和微信充值将在商户资料准备好后接入。</p></div></div>
+</div>
 
-<div id="formalAuth" class="formal-auth" onclick="closeFormalAuth(event)"><div class="formal-auth-card" onclick="event.stopPropagation()"><div class="formal-tabs"><button id="formalLoginTab" class="formal-tab active" onclick="setFormalAuthMode('login')">登录</button><button id="formalRegisterTab" class="formal-tab" onclick="setFormalAuthMode('register')">注册</button></div><div class="formal-field"><label>邮箱</label><input id="formalEmail" type="email"></div><div class="formal-field"><label>密码</label><input id="formalPassword" type="password"></div><div id="formalNameField" class="formal-field" style="display:none"><label>昵称</label><input id="formalName"></div><button class="formal-btn" style="width:100%" onclick="submitFormalAuth()">继续</button></div></div>
-<div id="formalRecharge" class="formal-auth" onclick="closeRechargePanel(event)"><div class="formal-auth-card" onclick="event.stopPropagation()"><h2>充值</h2><div id="formalAmounts" class="formal-pay-grid"><div class="formal-pay-option active" data-amount="20">¥20</div><div class="formal-pay-option" data-amount="50">¥50</div><div class="formal-pay-option" data-amount="100">¥100</div><div class="formal-pay-option" data-amount="200">¥200</div><div class="formal-pay-option" data-amount="500">¥500</div><div class="formal-pay-option" data-amount="1000">¥1000</div></div><div style="display:flex;gap:10px;margin-top:14px"><button class="formal-btn" style="flex:1" onclick="createFormalPayment('alipay')">支付宝</button><button class="formal-btn" style="flex:1" onclick="createFormalPayment('wechat')">微信支付</button></div><div id="formalQr" class="formal-qr">请选择支付方式</div></div></div>
+<div id="formalPageCharacters" class="formal-page">
+  <div class="formal-page-header"><button class="formal-back" onclick="closeFormalPage()">← 返回主页</button><div class="formal-page-title">人物库</div></div>
+  <div class="formal-page-body"><div id="formalCharactersGrid" class="formal-grid"></div></div>
+</div>
+
+<div id="formalPageWorks" class="formal-page">
+  <div class="formal-page-header"><button class="formal-back" onclick="closeFormalPage()">← 返回主页</button><div class="formal-page-title">我的作品</div></div>
+  <div class="formal-page-body"><div id="formalWorksGrid" class="formal-grid"></div></div>
+</div>
+
+<div id="formalPageRecords" class="formal-page">
+  <div class="formal-page-header"><button class="formal-back" onclick="closeFormalPage()">← 返回主页</button><div class="formal-page-title">消费记录</div></div>
+  <div class="formal-page-body"><div id="formalRecordsList" class="formal-card"><div class="formal-empty">暂无消费记录</div></div></div>
+</div>
+
+<div id="formalPageSettings" class="formal-page">
+  <div class="formal-page-header"><button class="formal-back" onclick="closeFormalPage()">← 返回主页</button><div class="formal-page-title">设置</div></div>
+  <div class="formal-page-body"><div class="formal-card"><div class="formal-account-line"><span>后端地址</span><b>jerry123 Worker</b></div><div class="formal-account-line"><span>人物稳定模式</span><b>已开启</b></div><div class="formal-account-line"><span>自动身份板</span><b>已开启</b></div></div></div>
+</div>
 <div id="dramaMask" class="drama-mask" onclick="closeDramaPanel(event)"><div class="drama-panel" onclick="event.stopPropagation()"><div class="drama-head"><div class="drama-title">🎞 AI短剧</div><button class="drama-close" onclick="closeDramaPanel()">×</button></div><div class="drama-grid"><div class="drama-field full"><label>故事创意或小说内容</label><textarea id="dramaIdea" placeholder="例如：男主的女朋友突然离世，他把她的意识以量子形态保存。二十年后，他将意识植入机器人……"></textarea></div><div class="drama-field"><label>总集数</label><select id="dramaEpisodeCount" onchange="toggleCustomEpisodeCount()"><option value="3">3 集（测试）</option><option value="5">5 集</option><option value="10">10 集</option><option value="20" selected>20 集</option><option value="30">30 集</option><option value="50">50 集</option><option value="80">80 集</option><option value="100">100 集</option><option value="custom">自定义</option></select><input id="dramaCustomEpisodeCount" type="number" min="1" max="200" value="100" style="display:none;margin-top:8px" placeholder="输入1-200集"></div><div class="drama-field"><label>分批生成</label><select id="dramaBatchSize"><option value="5">每批5集</option><option value="10" selected>每批10集</option></select></div><div class="drama-field"><label>每集时长</label><select id="dramaEpisodeSeconds"><option value="30">约30秒</option><option value="60" selected>约60秒</option><option value="90">约90秒</option></select></div><div class="drama-field"><label>画面风格</label><select id="dramaStyle"><option>电影写实</option><option>都市短剧</option><option>科幻电影</option><option>国漫</option><option>日漫</option><option>3D动画</option></select></div><div class="drama-field"><label>单镜头最长</label><select id="dramaSceneSeconds"><option value="8">8秒</option><option value="10">10秒</option><option value="15" selected>15秒</option></select></div><div class="drama-field"><label>视频清晰度</label><select id="dramaVideoResolution"><option value="480p">流畅 480P</option><option value="720p" selected>高清 720P</option><option value="1080p">超清 1080P</option></select></div><div class="drama-field"><label>视频尺寸</label><select id="dramaVideoRatio"><option value="9:16" selected>9:16 竖屏短剧</option><option value="16:9">16:9 横屏</option><option value="1:1">1:1 方形</option><option value="4:3">4:3 横屏</option><option value="3:4">3:4 竖屏</option></select></div><div class="drama-field"><label>视频帧率</label><select id="dramaVideoFps"><option value="24" selected>24 FPS 电影感</option><option value="60">60 FPS 流畅</option></select></div><div class="drama-field full"><div class="drama-check-row"><label><input id="dramaGenerateAudio" type="checkbox" checked> 生成音频</label><label><input id="dramaWatermark" type="checkbox"> 水印</label></div></div>
 <div class="drama-field full"><div class="drama-check-row">
 <label><input id="dramaAutoCharacterBoard" type="checkbox" checked> 自动生成角色四视图身份板</label>
@@ -518,6 +576,7 @@ if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 
 updateChatModelUI();
 updateModeUI();
+refreshFormalAccount();
 renderChatList();
 renderMessages();
 
@@ -952,31 +1011,119 @@ function createConversation(){
 }
 
 
-const FORMAL_API='https://jerry123.834833904.workers.dev';
-let formalToken=localStorage.getItem("jerry_formal_token")||"",formalAuthMode="login",formalAmount=20,formalUser=null;
-function openFormalMenu(){formalDrawer.classList.add("show")}
-function closeFormalMenu(e){if(e&&e.target!==e.currentTarget)return;formalDrawer.classList.remove("show")}
-function goFormalHome(){document.querySelectorAll(".formal-page").forEach(x=>x.classList.remove("show"));closeFormalMenu()}
-function openFormalPage(name){closeFormalMenu();goFormalHome();document.getElementById("formalPage"+name[0].toUpperCase()+name.slice(1))?.classList.add("show");if(name==="characters")renderFormalCharacters();if(name==="works")renderFormalWorks();if(name==="wallet")loadFormalWallet();if(name==="transactions")loadFormalTransactions();if(name==="profile")renderFormalProfile();if(name==="admin")loadFormalAdmin()}
-function openFormalAuth(){formalAuth.classList.add("show")}
-function closeFormalAuth(e){if(e&&e.target!==e.currentTarget)return;formalAuth.classList.remove("show")}
-function setFormalAuthMode(m){formalAuthMode=m;formalLoginTab.classList.toggle("active",m==="login");formalRegisterTab.classList.toggle("active",m==="register");formalNameField.style.display=m==="register"?"flex":"none"}
-async function formalApi(path,options={}){const headers=Object.assign({"Content-Type":"application/json"},options.headers||{});if(formalToken)headers.Authorization="Bearer "+formalToken;const r=await fetch(FORMAL_API+path,Object.assign({},options,{headers}));let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);return d}
-async function submitFormalAuth(){try{const body={email:formalEmail.value.trim(),password:formalPassword.value,name:formalName.value.trim()};const d=await formalApi(formalAuthMode==="register"?"/api/auth/register":"/api/auth/login",{method:"POST",body:JSON.stringify(body)});formalToken=d.token;localStorage.setItem("jerry_formal_token",formalToken);formalUser=d.user;closeFormalAuth();updateFormalUser();alert(formalAuthMode==="register"?"注册成功":"登录成功")}catch(e){alert(e.message)}}
-async function loadFormalMe(){if(!formalToken)return updateFormalUser();try{const d=await formalApi("/api/me");formalUser=d.user;updateFormalUser()}catch{formalToken="";localStorage.removeItem("jerry_formal_token");formalUser=null;updateFormalUser()}}
-function updateFormalUser(){formalLoginPill.textContent=formalUser?formalUser.name||formalUser.email:"登录";formalBalancePill.textContent=`¥${Number(formalUser?.balance||0).toFixed(2)}`;formalProfileText.textContent=formalUser?`${formalUser.name||formalUser.email} · ${formalUser.email}`:"未登录";formalAdminMenu.style.display=formalUser?.role==="admin"?"block":"none"}
-function renderFormalCharacters(){const list=getCharacterLibrary();formalCharacters.innerHTML=list.length?list.map(c=>`<div class="formal-char"><img src="${c.referenceImage}"><div class="formal-info"><b>${escapeHtml(c.name)}</b></div></div>`).join(""):"<div class='formal-card'>暂无人物。</div>"}
-function collectFormalWorks(){const a=[];conversations.forEach(c=>(c.messages||[]).forEach(m=>{if(m.image)a.push({type:"image",url:m.image,title:c.title});if(m.video)a.push({type:"video",url:m.video,title:c.title})}));return a}
-function renderFormalWorks(){const list=collectFormalWorks();formalWorks.innerHTML=list.length?list.map(w=>`<div class="formal-work">${w.type==="image"?`<img src="${w.url}">`:`<video src="${w.url}" controls></video>`}<div class="formal-info">${escapeHtml(w.title||"作品")}</div></div>`).join(""):"<div class='formal-card'>暂无作品。</div>"}
-async function loadFormalWallet(){if(!formalToken)return openFormalAuth();try{const d=await formalApi("/api/wallet");formalUser=d.user;formalWalletBalance.textContent=`¥${Number(d.balance).toFixed(2)}`;formalMonthSpend.textContent=`¥${Number(d.monthSpend||0).toFixed(2)}`;updateFormalUser()}catch(e){alert(e.message)}}
-async function loadFormalTransactions(){if(!formalToken)return openFormalAuth();try{const d=await formalApi("/api/transactions");formalTxRows.innerHTML=d.items.length?d.items.map(x=>`<tr><td>${new Date(x.created_at).toLocaleString()}</td><td>${x.type}</td><td>${escapeHtml(x.description||"")}</td><td>${x.amount>=0?"+":""}¥${Number(x.amount).toFixed(2)}</td></tr>`).join(""):"<tr><td colspan='4'>暂无记录</td></tr>"}catch(e){alert(e.message)}}
-function renderFormalProfile(){if(!formalUser)openFormalAuth();updateFormalUser()}
-function openRechargePanel(){if(!formalToken)return openFormalAuth();formalRecharge.classList.add("show")}
-function closeRechargePanel(e){if(e&&e.target!==e.currentTarget)return;formalRecharge.classList.remove("show")}
-async function createFormalPayment(provider){try{formalQr.textContent="正在创建订单…";const d=await formalApi("/api/payment/create",{method:"POST",body:JSON.stringify({provider,amount:formalAmount})});formalQr.innerHTML=d.qr_code?`<img style="width:100%;height:100%" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(d.qr_code)}">`:escapeHtml(d.message||"订单已创建");if(d.order_id)pollFormalOrder(d.order_id)}catch(e){formalQr.textContent=e.message}}
-async function pollFormalOrder(id){for(let i=0;i<60;i++){await new Promise(r=>setTimeout(r,2000));try{const d=await formalApi(`/api/payment/status?id=${encodeURIComponent(id)}`);if(d.status==="paid"){formalQr.textContent="支付成功，余额已到账";await loadFormalMe();await loadFormalWallet();return}}catch{}}}
-async function loadFormalAdmin(){try{const d=await formalApi("/api/admin/stats");adminUsers.textContent=d.users;adminRecharge.textContent=`¥${Number(d.recharge).toFixed(2)}`;adminSpend.textContent=`¥${Number(d.spend).toFixed(2)}`}catch(e){alert(e.message)}}
-document.addEventListener("DOMContentLoaded",()=>{document.querySelectorAll("#formalAmounts .formal-pay-option").forEach(el=>el.onclick=()=>{document.querySelectorAll("#formalAmounts .formal-pay-option").forEach(x=>x.classList.remove("active"));el.classList.add("active");formalAmount=Number(el.dataset.amount)});loadFormalMe()});
+const FORMAL_API="https://jerry123.834833904.workers.dev";
+const FORMAL_TOKEN_KEY="jerry_formal_token";
+const FORMAL_USER_KEY="jerry_formal_user";
+let formalAuthMode="login";
+
+function toggleFormalMenu(event){
+  event?.stopPropagation();
+  document.getElementById("formalMenu")?.classList.toggle("show");
+}
+document.addEventListener("click",event=>{
+  if(!event.target.closest("#formalMenu")&&!event.target.closest("#formalFunctionBtn")){
+    document.getElementById("formalMenu")?.classList.remove("show");
+  }
+});
+
+function openFormalPage(name){
+  document.getElementById("formalMenu")?.classList.remove("show");
+  document.querySelectorAll(".formal-page").forEach(page=>page.classList.remove("show"));
+  document.getElementById("formalPage"+name.charAt(0).toUpperCase()+name.slice(1))?.classList.add("show");
+  if(name==="account")refreshFormalAccount();
+  if(name==="wallet")loadFormalWallet();
+  if(name==="characters")renderFormalCharacters();
+  if(name==="works")renderFormalWorks();
+}
+function closeFormalPage(){document.querySelectorAll(".formal-page").forEach(page=>page.classList.remove("show"))}
+
+function switchFormalAuth(mode){
+  formalAuthMode=mode;
+  formalLoginTab.classList.toggle("active",mode==="login");
+  formalRegisterTab.classList.toggle("active",mode==="register");
+  formalNameRow.style.display=mode==="register"?"flex":"none";
+  formalAuthSubmit.textContent=mode==="register"?"注册":"登录";
+}
+
+async function formalApi(path,options={}){
+  const token=localStorage.getItem(FORMAL_TOKEN_KEY);
+  const headers=Object.assign({"Content-Type":"application/json"},options.headers||{});
+  if(token)headers.Authorization=`Bearer ${token}`;
+  const response=await fetch(FORMAL_API+path,Object.assign({},options,{headers}));
+  const data=await response.json().catch(()=>({ok:false,error:`HTTP ${response.status}`}));
+  if(!response.ok||data.ok===false)throw new Error(data.error||`请求失败 HTTP ${response.status}`);
+  return data;
+}
+
+async function submitFormalAuth(){
+  const email=formalEmail.value.trim();
+  const password=formalPassword.value;
+  const name=formalName.value.trim();
+  if(!email||password.length<8)return alert("请输入有效邮箱，密码至少8位");
+  formalAuthSubmit.disabled=true;
+  formalAuthSubmit.textContent="处理中…";
+  try{
+    const path=formalAuthMode==="register"?"/api/auth/register":"/api/auth/login";
+    const payload=formalAuthMode==="register"?{email,password,name}:{email,password};
+    const data=await formalApi(path,{method:"POST",body:JSON.stringify(payload)});
+    localStorage.setItem(FORMAL_TOKEN_KEY,data.token);
+    localStorage.setItem(FORMAL_USER_KEY,JSON.stringify(data.user));
+    refreshFormalAccount();
+    alert(formalAuthMode==="register"?"注册成功":"登录成功");
+  }catch(err){alert(err.message)}
+  finally{formalAuthSubmit.disabled=false;formalAuthSubmit.textContent=formalAuthMode==="register"?"注册":"登录"}
+}
+
+function getFormalUser(){
+  try{return JSON.parse(localStorage.getItem(FORMAL_USER_KEY)||"null")}catch{return null}
+}
+function refreshFormalAccount(){
+  const user=getFormalUser();
+  formalLoggedOut.style.display=user?"none":"block";
+  formalLoggedIn.style.display=user?"block":"none";
+  formalLogoutBtn.style.display=user?"block":"none";
+  formalFunctionBtn.textContent=user?(user.name||"账户"):"功能";
+  if(user){
+    formalUserName.textContent=user.name||"-";
+    formalUserEmail.textContent=user.email||"-";
+    formalUserRole.textContent=user.role||"user";
+  }
+}
+async function loadFormalWallet(){
+  const user=getFormalUser();
+  if(!user){formalBalance.textContent="请先登录";return}
+  try{
+    const data=await formalApi("/api/wallet",{method:"GET"});
+    const balance=Number(data.balance??data.user?.balance??0);
+    formalBalance.textContent=`¥${balance.toFixed(2)}`;
+    if(data.user){
+      localStorage.setItem(FORMAL_USER_KEY,JSON.stringify(data.user));
+      refreshFormalAccount();
+    }
+  }catch(err){formalBalance.textContent="读取失败";alert(err.message)}
+}
+function formalLogout(){
+  localStorage.removeItem(FORMAL_TOKEN_KEY);
+  localStorage.removeItem(FORMAL_USER_KEY);
+  refreshFormalAccount();
+  closeFormalPage();
+}
+
+function renderFormalCharacters(){
+  const grid=document.getElementById("formalCharactersGrid");
+  const list=typeof getCharacterLibrary==="function"?getCharacterLibrary():[];
+  if(!list.length){grid.innerHTML='<div class="formal-card">暂无人物，请先在AI短剧里创建角色。</div>';return}
+  grid.innerHTML=list.map(item=>`<div class="formal-item"><img src="${item.referenceImage}"><div class="formal-item-info"><b>${escapeHtml(item.name||"角色")}</b></div></div>`).join("");
+}
+function renderFormalWorks(){
+  const grid=document.getElementById("formalWorksGrid"),works=[];
+  conversations.forEach(c=>(c.messages||[]).forEach(m=>{
+    if(m.image)works.push({type:"image",url:m.image,title:c.title});
+    if(m.video)works.push({type:"video",url:m.video,title:c.title});
+  }));
+  if(!works.length){grid.innerHTML='<div class="formal-card">暂无作品。</div>';return}
+  grid.innerHTML=works.map(work=>`<div class="formal-item">${work.type==="image"?`<img src="${work.url}">`:`<video src="${work.url}" controls></video>`}<div class="formal-item-info">${escapeHtml(work.title||"作品")}</div></div>`).join("");
+}
 
 function newChat(){
   cancelMessageSelection();
