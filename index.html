@@ -1202,9 +1202,7 @@ async function sendMessage(){
 
   input.value="";
   input.style.height="auto";
-  clearImage();
-  selectedVideoFiles=[];
-  renderMediaPreview();
+  resetComposerAfterSubmit();
   saveAll();
   renderChatList();
 
@@ -1245,6 +1243,28 @@ async function sendMessage(){
   }finally{
     setSubmitting(false);
   }
+}
+
+
+function resetComposerAfterSubmit(){
+  selectedVideoFiles=[];
+  mediaInput.value="";
+  videoImageUrls.value="";
+  videoVideoUrls.value="";
+  videoAudioUrls.value="";
+  videoReferencePanel.classList.remove("show");
+
+  selectedImageBase64=null;
+  selectedImageName="";
+  imageInput.value="";
+  previewImg.src="";
+  previewName.textContent="";
+  preview.style.display="none";
+
+  forcedTaskMode=null;
+  taskMode.value="chat";
+  renderMediaPreview();
+  updateModeUI();
 }
 
 async function generateImage(){
@@ -1341,6 +1361,15 @@ async function generateVideo(){
     return;
   }
 
+  // 保存一张参考图片用于显示在本次用户消息中。
+  let referencePreviewImage=selectedImageBase64 || null;
+  if(!referencePreviewImage){
+    const firstLocalImage=localFiles.find(file=>getFileMediaType(file)==="image");
+    if(firstLocalImage){
+      try{referencePreviewImage=await compressImage(firstLocalImage)}catch{}
+    }
+  }
+
   setSubmitting(true);
   const c=getCurrent();
   if(c.title==="新聊天")c.title="视频："+prompt.slice(0,14);
@@ -1353,7 +1382,8 @@ async function generateVideo(){
 
   const userMessage={
     role:"user",
-    content:"生成视频："+prompt+(summary.length?`\n参考素材：${summary.join("、")}`:"")
+    content:"生成视频："+prompt+(summary.length?`\n参考素材：${summary.join("、")}`:""),
+    image:referencePreviewImage || null
   };
   c.messages.push(userMessage);
   addMessageToPage("user",userMessage);
@@ -1362,6 +1392,7 @@ async function generateVideo(){
 
   input.value="";
   input.style.height="auto";
+  resetComposerAfterSubmit();
   saveAll();
   renderChatList();
 
@@ -1370,6 +1401,7 @@ async function generateVideo(){
     content:"视频任务正在创建...",
     mediaType:"video",
     status:"creating",
+    startedAt:Date.now(),
     statusText:localFiles.length?"正在处理本地参考素材...":"正在创建视频任务..."
   };
   const aiIndex=c.messages.length;
@@ -1423,8 +1455,6 @@ async function generateVideo(){
     aiMessage.statusText=`任务已提交，包含 ${data.referenceCount ?? references.length} 个参考素材，正在排队或生成中...`;
     saveAll();
     appendVideoStatus(bubble,aiMessage.status,aiMessage.statusText);
-    clearVideoReferences();
-    clearImage();
     closeMediaViewer();
     pollVideoTask(data.taskId,bubble,c,aiIndex);
   }catch(err){
@@ -1480,6 +1510,11 @@ async function pollVideoTask(taskId,bubble,conversation,messageIndex){
 
   const maxAttempts=180;
   let attempt=0;
+  const initialMessage=conversation.messages[messageIndex];
+  if(initialMessage && !initialMessage.startedAt){
+    initialMessage.startedAt=Date.now();
+    saveAll();
+  }
 
   try{
     while(attempt<maxAttempts){
@@ -1492,7 +1527,8 @@ async function pollVideoTask(taskId,bubble,conversation,messageIndex){
       if(!message || message.taskId!==taskId)break;
 
       message.status=status;
-      message.statusText=videoStatusText(status,data.error,attempt);
+      const elapsedSeconds=Math.max(0,Math.floor((Date.now()-(Number(message.startedAt)||Date.now()))/1000));
+      message.statusText=videoStatusText(status,data.error,elapsedSeconds);
 
       if(status==="succeeded" && data.video){
         message.video=data.video;
@@ -1529,14 +1565,15 @@ async function pollVideoTask(taskId,bubble,conversation,messageIndex){
   }
 }
 
-function videoStatusText(status,error,attempt){
-  if(status==="queued")return `视频正在排队（第 ${attempt} 次查询）...`;
-  if(status==="running")return `视频正在生成（第 ${attempt} 次查询）...`;
+function videoStatusText(status,error,elapsedSeconds){
+  const seconds=Math.max(0,Number(elapsedSeconds)||0);
+  if(status==="queued")return `视频正在排队，已等待 ${seconds} 秒...`;
+  if(status==="running")return `视频正在生成，已思考 ${seconds} 秒...`;
   if(status==="succeeded")return "视频生成完成";
   if(status==="failed")return "视频生成失败："+(error || "未知错误");
   if(status==="cancelled")return "视频任务已取消";
   if(status==="expired")return "视频任务已过期";
-  return `视频任务状态：${status}（第 ${attempt} 次查询）`;
+  return `视频正在处理，已思考 ${seconds} 秒...`;
 }
 
 async function postJson(url,payload){
