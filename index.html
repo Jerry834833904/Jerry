@@ -162,6 +162,8 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 .quick-tools::-webkit-scrollbar{display:none}
 .quick-tool{border:1px solid #ddd;background:#fff;color:#222;border-radius:14px;padding:8px 13px;font-size:14px;white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:6px}
 .quick-tool.active{background:#111;color:#fff;border-color:#111}
+
+.drama-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:130;display:none;align-items:flex-end;justify-content:center}.drama-mask.show{display:flex}.drama-panel{width:min(760px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:26px 26px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -18px 60px rgba(0,0,0,.22)}.drama-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.drama-title{font-size:22px;font-weight:750}.drama-close{border:0;background:#f1f1f1;width:38px;height:38px;border-radius:50%;font-size:20px}.drama-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.drama-field{display:flex;flex-direction:column;gap:7px}.drama-field.full{grid-column:1/-1}.drama-field label{font-size:13px;color:#666}.drama-field input,.drama-field select,.drama-field textarea{width:100%;border:1px solid #ddd;border-radius:14px;padding:12px;font:inherit;background:#fff}.drama-field textarea{min-height:120px;resize:vertical}.drama-check-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 2px}.drama-check-row label{display:flex;align-items:center;gap:7px;font-size:14px;color:#333}.drama-check-row input{width:20px;height:20px}.drama-submit{width:100%;margin-top:16px;border:0;background:#111;color:#fff;border-radius:15px;padding:14px;font-size:16px;font-weight:700}.drama-submit:disabled{opacity:.45}.drama-note{margin-top:10px;font-size:12px;color:#777;line-height:1.55}.drama-project{margin-top:14px;display:flex;flex-direction:column;gap:12px}.drama-summary{padding:14px;background:#f7f7f7;border-radius:16px}.drama-project-title{font-size:18px;font-weight:750;margin-bottom:6px}.drama-episode{border:1px solid #e2e2e2;border-radius:17px;overflow:hidden;background:#fff}.drama-episode-head{padding:13px 14px;background:#f7f7f7}.drama-episode-name{font-weight:720}.drama-hook{font-size:13px;color:#666;margin-top:4px}.drama-scenes{padding:10px;display:flex;flex-direction:column;gap:9px}.drama-scene{border:1px solid #e7e7e7;border-radius:14px;padding:11px}.drama-scene-top{display:flex;align-items:center;gap:8px;margin-bottom:7px}.drama-scene-num{font-weight:700}.drama-duration{font-size:12px;background:#eee;border-radius:999px;padding:3px 8px}.drama-scene-prompt{font-size:14px;line-height:1.55;white-space:pre-wrap}.drama-dialogue{margin-top:7px;color:#666;font-size:13px;white-space:pre-wrap}.drama-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.drama-btn{border:1px solid #d9d9d9;background:#fff;border-radius:11px;padding:8px 11px;font-size:13px}.drama-btn.primary{background:#111;color:#fff;border-color:#111}.drama-btn:disabled{opacity:.45}@media(max-width:640px){.drama-grid{grid-template-columns:1fr}.drama-field.full{grid-column:auto}}
 .quick-tool:active{transform:scale(.98)}
 
 .model-switch{position:relative;display:flex;align-items:center;justify-content:center}
@@ -283,6 +285,10 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
             <option value="11">11 秒</option>
             <option value="15">15 秒</option>
           </select>
+          <select id="videoFps" class="small-select" title="视频帧率">
+            <option value="24" selected>24 FPS 电影感</option>
+            <option value="60">60 FPS 流畅</option>
+          </select>
           <label class="toggle-label"><input id="videoAudio" type="checkbox" checked> 生成音频</label>
           <label class="toggle-label"><input id="videoWatermark" type="checkbox"> 水印</label>
           <button type="button" class="small-btn" onclick="toggleReferencePanel()">🔗 素材 URL</button>
@@ -331,6 +337,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
       <div id="quickTools" class="quick-tools">
         <button id="quickImage" type="button" class="quick-tool" onclick="selectQuickMode('image')">🖼️ 图片生成</button>
         <button id="quickVideo" type="button" class="quick-tool" onclick="selectQuickMode('video')">🎬 视频生成</button>
+        <button id="quickDrama" type="button" class="quick-tool" onclick="openDramaPanel()">🎞 AI短剧</button>
       </div>
 
       <div id="inputBox" class="input-box">
@@ -347,6 +354,8 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
   </div>
 </div>
 
+
+<div id="dramaMask" class="drama-mask" onclick="closeDramaPanel(event)"><div class="drama-panel" onclick="event.stopPropagation()"><div class="drama-head"><div class="drama-title">🎞 AI短剧</div><button class="drama-close" onclick="closeDramaPanel()">×</button></div><div class="drama-grid"><div class="drama-field full"><label>故事创意或小说内容</label><textarea id="dramaIdea" placeholder="例如：男主的女朋友突然离世，他把她的意识以量子形态保存。二十年后，他将意识植入机器人……"></textarea></div><div class="drama-field"><label>总集数</label><select id="dramaEpisodeCount" onchange="toggleCustomEpisodeCount()"><option value="3">3 集（测试）</option><option value="5">5 集</option><option value="10">10 集</option><option value="20" selected>20 集</option><option value="30">30 集</option><option value="50">50 集</option><option value="80">80 集</option><option value="100">100 集</option><option value="custom">自定义</option></select><input id="dramaCustomEpisodeCount" type="number" min="1" max="200" value="100" style="display:none;margin-top:8px" placeholder="输入1-200集"></div><div class="drama-field"><label>分批生成</label><select id="dramaBatchSize"><option value="5">每批5集</option><option value="10" selected>每批10集</option></select></div><div class="drama-field"><label>每集时长</label><select id="dramaEpisodeSeconds"><option value="30">约30秒</option><option value="60" selected>约60秒</option><option value="90">约90秒</option></select></div><div class="drama-field"><label>画面风格</label><select id="dramaStyle"><option>电影写实</option><option>都市短剧</option><option>科幻电影</option><option>国漫</option><option>日漫</option><option>3D动画</option></select></div><div class="drama-field"><label>单镜头最长</label><select id="dramaSceneSeconds"><option value="8">8秒</option><option value="10">10秒</option><option value="15" selected>15秒</option></select></div><div class="drama-field"><label>视频清晰度</label><select id="dramaVideoResolution"><option value="480p">流畅 480P</option><option value="720p" selected>高清 720P</option><option value="1080p">超清 1080P</option></select></div><div class="drama-field"><label>视频尺寸</label><select id="dramaVideoRatio"><option value="9:16" selected>9:16 竖屏短剧</option><option value="16:9">16:9 横屏</option><option value="1:1">1:1 方形</option><option value="4:3">4:3 横屏</option><option value="3:4">3:4 竖屏</option></select></div><div class="drama-field"><label>视频帧率</label><select id="dramaVideoFps"><option value="24" selected>24 FPS 电影感</option><option value="60">60 FPS 流畅</option></select></div><div class="drama-field full"><div class="drama-check-row"><label><input id="dramaGenerateAudio" type="checkbox" checked> 生成音频</label><label><input id="dramaWatermark" type="checkbox"> 水印</label></div></div></div><button id="dramaSubmit" class="drama-submit" onclick="createDramaPlan()">生成分集与分镜</button><div id="dramaProgress" class="drama-note" style="display:none;margin-top:12px"></div><button id="dramaContinue" class="drama-submit" style="display:none;background:#444" onclick="continueDramaGeneration()">继续生成下一批</button><div class="drama-note">先生成全剧大纲，再按5～10集分批生成详细分镜，支持最多200集。生成剧本计划不会产生视频费用；确认分镜后再提交Seedance。每个镜头不超过15秒。</div></div></div>
 
 <div id="messageMenuMask" class="message-menu-mask" onclick="closeMessageMenu(event)">
   <div class="message-menu" onclick="event.stopPropagation()">
@@ -1071,6 +1080,11 @@ function addMessageToPage(role,message={}){
   if(role==="assistant")renderMarkdown(bubble,message.content || "");
   else bubble.textContent=message.content || "";
 
+  if(message.dramaProject){
+    bubble.innerHTML="";
+    bubble.appendChild(renderDramaProject(message.dramaProject));
+  }
+
   if(message.image){
     const img=document.createElement("img");
     img.className="msg-img";
@@ -1112,7 +1126,7 @@ function addMessageToPage(role,message={}){
     actions.appendChild(downVideo);
   }
 
-  if(role==="assistant" && !message.image && !message.video){
+  if(role==="assistant" && !message.image && !message.video && !message.dramaProject){
     const voice=document.createElement("button");
     voice.className="action-btn";
     voice.textContent="🔊 播放";
@@ -1245,6 +1259,67 @@ async function sendMessage(){
   }
 }
 
+
+
+
+let currentDramaGeneration=null;
+function toggleCustomEpisodeCount(){const s=document.getElementById("dramaEpisodeCount"),c=document.getElementById("dramaCustomEpisodeCount");if(c)c.style.display=s?.value==="custom"?"block":"none"}
+function getDramaEpisodeCount(){const s=document.getElementById("dramaEpisodeCount");let v=s?.value;if(v==="custom")v=document.getElementById("dramaCustomEpisodeCount")?.value;return Math.max(1,Math.min(200,Number(v)||20))}
+function setDramaProgress(message){const el=document.getElementById("dramaProgress");if(!el)return;el.style.display=message?"block":"none";el.textContent=message||""}
+function mergeDramaEpisodes(target,incoming){const map=new Map((target.episodes||[]).map(ep=>[Number(ep.number),ep]));for(const ep of incoming||[])map.set(Number(ep.number),ep);target.episodes=[...map.values()].sort((a,b)=>Number(a.number)-Number(b.number));return target}
+function openDramaPanel(){
+  const idea=document.getElementById("dramaIdea");
+  if(idea && !idea.value.trim() && input.value.trim())idea.value=input.value.trim();
+  document.getElementById("dramaMask")?.classList.add("show");
+}
+function closeDramaPanel(event){if(event && event.target!==event.currentTarget)return;document.getElementById("dramaMask")?.classList.remove("show");}
+function extractJsonObject(v){let raw=String(v||"").trim().replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"").trim();const s=raw.indexOf("{");const e=raw.lastIndexOf("}");if(s<0||e<=s)throw new Error("模型没有返回可读取的JSON剧本");return JSON.parse(raw.slice(s,e+1));}
+function normalizeDramaProject(p,s){const eps=Array.isArray(p?.episodes)?p.episodes:[];if(!eps.length)throw new Error("没有生成分集内容");return{id:"drama_"+Date.now(),title:String(p.title||"未命名短剧"),synopsis:String(p.synopsis||p.summary||""),style:s.style,episodes:eps.map((ep,i)=>({number:Number(ep.number)||i+1,title:String(ep.title||`第${i+1}集`),hook:String(ep.hook||ep.cliffhanger||""),summary:String(ep.summary||""),scenes:(Array.isArray(ep.scenes)?ep.scenes:[]).map((sc,j)=>({number:Number(sc.number)||j+1,duration:Math.min(15,Math.max(4,Number(sc.duration)||s.sceneSeconds)),prompt:String(sc.prompt||sc.visual_prompt||sc.description||""),narration:String(sc.narration||""),dialogue:String(sc.dialogue||"")}))}))};}
+async function createDramaPlan(){
+  const idea=document.getElementById("dramaIdea").value.trim();if(!idea)return alert("请填写故事创意");
+  const episodeCount=getDramaEpisodeCount(),episodeSeconds=Number(document.getElementById("dramaEpisodeSeconds").value)||60,sceneSeconds=Math.min(15,Number(document.getElementById("dramaSceneSeconds").value)||15),style=document.getElementById("dramaStyle").value,batchSize=Math.max(1,Math.min(10,Number(document.getElementById("dramaBatchSize")?.value)||10)),sceneCount=Math.max(2,Math.ceil(episodeSeconds/sceneSeconds)),btn=document.getElementById("dramaSubmit"),continueBtn=document.getElementById("dramaContinue");
+  btn.disabled=true;btn.textContent="正在生成全剧大纲…";if(continueBtn)continueBtn.style.display="none";setDramaProgress(`正在规划 ${episodeCount} 集短剧…`);
+  try{
+    const prompt=`你是专业竖屏短剧总编剧。根据用户创意规划一部共${episodeCount}集的短剧，只生成全剧大纲，不生成详细分镜。风格：${style}；每集约${episodeSeconds}秒。每集必须有标题、剧情摘要、结尾悬念；人物关系和时间线连续；前3集快速建立冲突，中段持续升级，最后5集收束主线。只返回合法JSON，不要Markdown。格式：{"title":"剧名","synopsis":"总梗概","characters":[{"name":"姓名","description":"人物设定"}],"episodes":[{"number":1,"title":"标题","summary":"本集剧情","hook":"结尾悬念"}]}。用户创意：${idea}`;
+    const data=await postJson(CHAT_WORKER_URL,{type:"text",model:currentChatModel,chatModel:currentChatModel,mode:"reasoner",messages:[{role:"user",content:prompt}]});
+    const outline=extractJsonObject(data.reply||"");if(!Array.isArray(outline.episodes)||!outline.episodes.length)throw new Error("没有生成有效的分集大纲");
+    const dramaVideoResolution=document.getElementById("dramaVideoResolution")?.value||"720p",dramaVideoRatio=document.getElementById("dramaVideoRatio")?.value||"9:16",dramaVideoFps=Number(document.getElementById("dramaVideoFps")?.value)||24,dramaGenerateAudio=document.getElementById("dramaGenerateAudio")?.checked!==false,dramaWatermark=document.getElementById("dramaWatermark")?.checked===true;currentDramaGeneration={idea,episodeCount,episodeSeconds,sceneSeconds,sceneCount,style,batchSize,outline,nextStart:1,videoResolution:dramaVideoResolution,videoRatio:dramaVideoRatio,videoFps:dramaVideoFps,generateAudio:dramaGenerateAudio,watermark:dramaWatermark,project:{id:"drama_"+Date.now(),title:String(outline.title||"未命名短剧"),synopsis:String(outline.synopsis||""),style,episodeSeconds,sceneSeconds,videoResolution:dramaVideoResolution,videoRatio:dramaVideoRatio,videoFps:dramaVideoFps,generateAudio:dramaGenerateAudio,watermark:dramaWatermark,createdAt:Date.now(),totalEpisodes:episodeCount,generatedEpisodes:0,characters:Array.isArray(outline.characters)?outline.characters:[],episodes:[]}};
+    await generateDramaBatch();
+  }catch(err){alert("短剧拆分失败："+err.message);setDramaProgress("")}
+  finally{btn.disabled=false;btn.textContent="重新生成分集与分镜"}
+}
+async function continueDramaGeneration(){if(currentDramaGeneration)await generateDramaBatch()}
+async function generateDramaBatch(){
+  const state=currentDramaGeneration;if(!state)return;
+  const startEpisode=state.nextStart,endEpisode=Math.min(state.episodeCount,startEpisode+state.batchSize-1),btn=document.getElementById("dramaSubmit"),continueBtn=document.getElementById("dramaContinue");
+  if(btn)btn.disabled=true;if(continueBtn){continueBtn.disabled=true;continueBtn.style.display="none"}setDramaProgress(`正在生成第 ${startEpisode}～${endEpisode} 集详细分镜，共 ${state.episodeCount} 集…`);
+  try{
+    const outlineSlice=(state.outline.episodes||[]).filter(ep=>Number(ep.number)>=startEpisode&&Number(ep.number)<=endEpisode);
+    const prompt=`你是专业竖屏短剧分镜导演。根据下方全剧设定，为第${startEpisode}到第${endEpisode}集生成详细分镜。每集约${state.episodeSeconds}秒，每集严格拆成${state.sceneCount}个镜头；每个镜头duration必须在4到${state.sceneSeconds}秒之间，绝不能超过15秒。画面风格：${state.style}。人物外貌、服装和场景必须连续一致。每个prompt直接用于Seedance，写清人物、动作、场景、镜头、光线和风格。只返回合法JSON，不要Markdown。格式：{"episodes":[{"number":1,"title":"标题","summary":"剧情","hook":"悬念","scenes":[{"number":1,"duration":10,"prompt":"视频提示词","narration":"旁白","dialogue":"对白"}]}]}。剧名：${state.outline.title}。总梗概：${state.outline.synopsis}。人物设定：${JSON.stringify(state.outline.characters||[])}。本批分集大纲：${JSON.stringify(outlineSlice)}`;
+    const data=await postJson(CHAT_WORKER_URL,{type:"text",model:currentChatModel,chatModel:currentChatModel,mode:"reasoner",messages:[{role:"user",content:prompt}]});
+    const parsed=extractJsonObject(data.reply||"");
+    const normalized=normalizeDramaProject({title:state.project.title,synopsis:state.project.synopsis,episodes:parsed.episodes||[]},{sceneSeconds:state.sceneSeconds,style:state.style});
+    mergeDramaEpisodes(state.project,normalized.episodes);state.project.generatedEpisodes=state.project.episodes.length;state.nextStart=endEpisode+1;
+    if(!state.messageRef){
+      const c=getCurrent();if(c.title==="新聊天")c.title="短剧："+state.project.title.slice(0,12);
+      const userMessage={role:"user",content:`AI短剧：${state.idea}\n${state.episodeCount}集｜每集约${state.episodeSeconds}秒｜${state.style}｜${state.videoResolution.toUpperCase()}｜${state.videoRatio}｜${state.videoFps||24}FPS`},aiMessage={role:"assistant",content:`《${state.project.title}》分集与分镜生成中`,dramaProject:state.project};
+      c.messages.push(userMessage,aiMessage);state.messageRef=aiMessage
+    }else{state.messageRef.dramaProject=state.project;state.messageRef.content=`《${state.project.title}》已生成 ${state.project.generatedEpisodes}/${state.episodeCount} 集`}
+    saveAll();renderChatList();renderMessages();
+    if(state.nextStart<=state.episodeCount){
+      setDramaProgress(`已生成 ${state.project.generatedEpisodes}/${state.episodeCount} 集，点击继续生成下一批。`);
+      if(continueBtn){continueBtn.style.display="block";continueBtn.textContent=`继续生成第 ${state.nextStart}～${Math.min(state.episodeCount,state.nextStart+state.batchSize-1)} 集`}
+    }else{
+      state.messageRef.content=`《${state.project.title}》${state.episodeCount}集分集与分镜已全部生成`;saveAll();renderMessages();setDramaProgress(`已完成全部 ${state.episodeCount} 集。`);if(continueBtn)continueBtn.style.display="none";closeDramaPanel()
+    }
+  }catch(err){
+    alert(`第${startEpisode}～${endEpisode}集生成失败：`+err.message);setDramaProgress(`生成中断，可重试第 ${startEpisode}～${endEpisode} 集。`);
+    if(continueBtn){continueBtn.style.display="block";continueBtn.textContent=`重试第 ${startEpisode}～${endEpisode} 集`}
+  }finally{if(btn)btn.disabled=false;if(continueBtn)continueBtn.disabled=false}
+}
+function renderDramaProject(project){const root=document.createElement("div");root.className="drama-project";const summary=document.createElement("div");summary.className="drama-summary";summary.innerHTML=`<div class="drama-project-title">${escapeHtml(project.title)}</div><div>${escapeHtml(project.synopsis)}</div><div style="margin-top:8px;font-size:12px;color:#777">${escapeHtml(project.style)} · ${escapeHtml((project.videoResolution||"720p").toUpperCase())} · ${escapeHtml(project.videoRatio||"9:16")} · ${project.videoFps||24} FPS · 已生成${project.episodes.length}/${project.totalEpisodes||project.episodes.length}集 · 每镜头≤15秒</div>`;root.appendChild(summary);project.episodes.forEach((ep,ei)=>{const card=document.createElement("div");card.className="drama-episode";const head=document.createElement("div");head.className="drama-episode-head";head.innerHTML=`<div class="drama-episode-name">第${ep.number||ei+1}集：${escapeHtml(ep.title)}</div><div class="drama-hook">${escapeHtml(ep.summary)}${ep.hook?`<br>悬念：${escapeHtml(ep.hook)}`:""}</div>`;card.appendChild(head);const scenes=document.createElement("div");scenes.className="drama-scenes";ep.scenes.forEach((sc,si)=>{const item=document.createElement("div");item.className="drama-scene";const d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("\n");item.innerHTML=`<div class="drama-scene-top"><span class="drama-scene-num">镜头${sc.number||si+1}</span><span class="drama-duration">${sc.duration}秒</span></div><div class="drama-scene-prompt">${escapeHtml(sc.prompt)}</div>${d?`<div class="drama-dialogue">${escapeHtml(d)}</div>`:""}`;const a=document.createElement("div");a.className="drama-actions";const use=document.createElement("button");use.className="drama-btn";use.textContent="放入视频生成";use.onclick=()=>useDramaScene(sc);a.appendChild(use);item.appendChild(a);scenes.appendChild(item)});card.appendChild(scenes);const ea=document.createElement("div");ea.className="drama-actions";ea.style.padding="0 10px 12px";const all=document.createElement("button");all.className="drama-btn primary";all.textContent="一键提交本集全部镜头";all.onclick=()=>generateDramaEpisode(project,ep,all);ea.appendChild(all);card.appendChild(ea);root.appendChild(card)});return root;}
+function useDramaScene(sc){const d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("；");input.value=sc.prompt+(d?`。${d}`:"");videoDuration.value=String(sc.duration);if(document.getElementById("videoFps"))document.getElementById("videoFps").value=String(document.getElementById("dramaVideoFps")?.value||24);forcedTaskMode="video";taskMode.value="video";updateModeUI();input.focus();input.dispatchEvent(new Event("input"));window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});}
+async function generateDramaEpisode(project,ep,button){if(!isMediaWorkerConfigured())return;if(!confirm(`将提交第${ep.number}集的${ep.scenes.length}个镜头，每个镜头都会产生视频费用，是否继续？`))return;button.disabled=true;const c=getCurrent();try{for(let i=0;i<ep.scenes.length;i++){const sc=ep.scenes[i],d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("；"),prompt=`短剧《${project.title}》第${ep.number}集镜头${sc.number}。${sc.prompt}${d?`。${d}`:""}`;const um={role:"user",content:`第${ep.number}集·镜头${sc.number}（${sc.duration}秒）\n${prompt}`};c.messages.push(um);addMessageToPage("user",um);const am={role:"assistant",content:"视频任务正在创建...",mediaType:"video",status:"creating",startedAt:Date.now(),statusText:"正在创建短剧镜头..."},idx=c.messages.length;c.messages.push(am);const {bubble}=addMessageToPage("assistant",am);appendVideoStatus(bubble,"creating",am.statusText);saveAll();try{const data=await postJson(MEDIA_WORKER_URL,{type:"create_video",modelKey:"seedance_20",prompt,resolution:project.videoResolution||document.getElementById("dramaVideoResolution")?.value||videoResolution?.value||"720p",ratio:project.videoRatio||document.getElementById("dramaVideoRatio")?.value||videoRatio?.value||"9:16",duration:Math.min(15,Math.max(4,Number(sc.duration)||10)),fps:Number(project.videoFps||document.getElementById("dramaVideoFps")?.value||24),generateAudio:project.generateAudio!==false,watermark:project.watermark===true,references:[]});if(!data.taskId)throw new Error(data.error||"没有返回任务ID");am.taskId=data.taskId;am.status=data.status||"queued";am.statusText="短剧镜头已提交，正在生成...";saveAll();appendVideoStatus(bubble,am.status,am.statusText);pollVideoTask(data.taskId,bubble,c,idx)}catch(err){am.status="failed";am.content="镜头生成失败："+err.message;am.statusText=am.content;appendVideoStatus(bubble,"failed",am.statusText);saveAll()}button.textContent=`已提交${i+1}/${ep.scenes.length}`;await new Promise(r=>setTimeout(r,450))}button.textContent="本集镜头已全部提交"}finally{setTimeout(()=>{button.disabled=false;button.textContent="一键提交本集全部镜头"},1800)}}
 
 function resetComposerAfterSubmit(){
   selectedVideoFiles=[];
@@ -1444,6 +1519,7 @@ async function generateVideo(){
       resolution:document.getElementById("videoResolution").value,
       ratio:document.getElementById("videoRatio").value,
       duration:Number(document.getElementById("videoDuration").value),
+      fps:Number(document.getElementById("videoFps")?.value||24),
       generateAudio:document.getElementById("videoAudio").checked,
       watermark:document.getElementById("videoWatermark").checked
     });
@@ -1916,6 +1992,8 @@ function triggerDownload(url,filename){
 }
 
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+function escapeHtml(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]||ch));}
+
 function escapeMarkdown(text){return String(text || "").replace(/[\\`*_{}\[\]()#+\-.!]/g,"\\$&")}
 
 function toggleSidebar(force){
