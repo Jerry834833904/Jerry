@@ -434,8 +434,44 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 </div>
 
 <div id="formalPageWallet" class="formal-page">
-  <div class="formal-page-header"><button class="formal-back" onclick="closeFormalPage()">← 返回主页</button><div class="formal-page-title">我的钱包</div></div>
-  <div class="formal-page-body"><div class="formal-card"><div>可用余额</div><div id="formalBalance" class="formal-money">¥0.00</div><p style="color:#777">支付宝和微信充值将在商户资料准备好后接入。</p></div></div>
+  <div class="formal-page-header">
+    <button class="formal-back" onclick="closeFormalPage()">← 返回主页</button>
+    <div class="formal-page-title">我的钱包</div>
+  </div>
+
+  <div class="formal-page-body">
+    <div class="formal-card">
+      <div>可用余额</div>
+      <div id="formalBalance" class="formal-money">¥0.00</div>
+    </div>
+
+    <div class="formal-card">
+      <h3 style="margin:0 0 10px">充值</h3>
+      <p style="margin:0 0 14px;color:#666;line-height:1.7">
+        当前采用人工到账。扫码付款后，请把注册邮箱和付款金额发给客服微信：Jeri926。
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+        <div style="border:1px solid #e5e5e5;border-radius:16px;padding:12px;text-align:center">
+          <div style="font-weight:700;margin-bottom:10px">支付宝充值</div>
+          <img src="./alipay.png" alt="支付宝收款码"
+               style="width:100%;max-width:320px;border-radius:12px;display:block;margin:0 auto">
+        </div>
+
+        <div style="border:1px solid #e5e5e5;border-radius:16px;padding:12px;text-align:center">
+          <div style="font-weight:700;margin-bottom:10px">微信充值</div>
+          <img src="./wechat.jpg" alt="微信收款码"
+               style="width:100%;max-width:320px;border-radius:12px;display:block;margin:0 auto">
+        </div>
+      </div>
+
+      <button class="formal-secondary"
+              style="width:100%;margin-top:14px"
+              onclick="copyRechargeInfo()">
+        复制我的充值信息
+      </button>
+    </div>
+  </div>
 </div>
 
 <div id="formalPageCharacters" class="formal-page">
@@ -577,6 +613,14 @@ let voiceResult = "";
 let isSubmitting = false;
 let forcedTaskMode = null;
 let currentChatModel = localStorage.getItem("jerry_chat_model") || "seed21_turbo";
+if(currentChatModel==="gpt6"){
+  currentChatModel="seed21_turbo";
+  localStorage.setItem("jerry_chat_model","seed21_turbo");
+}
+if(!["seed21_turbo","doubao","deepseek"].includes(currentChatModel)){
+  currentChatModel="seed21_turbo";
+  localStorage.setItem("jerry_chat_model","seed21_turbo");
+}
 const activeVideoPolls = new Set();
 let selectedMenuMessage=null;
 let messageLongPressTimer=null;
@@ -1267,7 +1311,6 @@ function refreshFormalAccount(){
   if(user){
     formalUserName.textContent=user.name||"-";
     formalUserEmail.textContent=user.email||"-";
-    formalUserPhone.textContent=user.phone?user.phone.replace(/^(\d{3})\d{4}(\d{4})$/,"$1****$2"):"-";
     formalUserRole.textContent=user.role||"user";
   }
 }
@@ -1284,6 +1327,28 @@ async function loadFormalWallet(){
     }
   }catch(err){formalBalance.textContent="读取失败";alert(err.message)}
 }
+function copyRechargeInfo(){
+  const user=getFormalUser();
+  if(!user){
+    alert("请先登录");
+    return;
+  }
+
+  const rechargeText =
+`Jerry AI 充值
+注册邮箱：${user.email || "-"}
+付款金额：____ 元
+付款方式：支付宝 / 微信`;
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(rechargeText)
+      .then(()=>alert("充值信息已复制"))
+      .catch(()=>window.prompt("请复制以下充值信息",rechargeText));
+  }else{
+    window.prompt("请复制以下充值信息",rechargeText);
+  }
+}
+
 async function formalLogout(){
   try{
     if(getFormalToken())await formalApi("/api/auth/logout",{method:"POST",body:JSON.stringify({deviceId:getFormalDeviceId()})});
