@@ -407,7 +407,8 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
     <div id="formalLoggedOut">
       <div class="formal-tabs"><button id="formalLoginTab" class="formal-tab active" onclick="switchFormalAuth('login')">登录</button><button id="formalRegisterTab" class="formal-tab" onclick="switchFormalAuth('register')">注册</button></div>
       <div class="formal-card">
-        <div class="formal-field"><label>邮箱</label><input id="formalEmail" type="email" placeholder="请输入邮箱"></div>
+        <div class="formal-field"><label id="formalAccountLabel">邮箱</label><input id="formalEmail" type="email" autocomplete="email" placeholder="请输入邮箱"></div>
+        <div id="formalEmailCodeRow" class="formal-field" style="display:none"><label>邮箱验证码</label><div style="display:flex;gap:8px"><input id="formalEmailCode" inputmode="numeric" maxlength="6" placeholder="6位验证码" style="flex:1"><button id="formalEmailButton" type="button" class="formal-secondary" onclick="sendFormalEmailCode()">获取验证码</button></div></div>
         <div id="formalNameRow" class="formal-field" style="display:none"><label>昵称</label><input id="formalName" placeholder="请输入昵称"></div>
         <div class="formal-field"><label>密码</label><input id="formalPassword" type="password" placeholder="至少8位"></div>
         <button id="formalAuthSubmit" class="formal-primary" onclick="submitFormalAuth()">登录</button>
@@ -577,19 +578,7 @@ if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 updateChatModelUI();
 updateModeUI();
 refreshFormalAccount();
-(async()=>{
-  if(getFormalToken()){
-    try{
-      const data=await formalApi("/api/me",{method:"GET"});
-      if(data.user){
-        localStorage.setItem(FORMAL_USER_KEY,JSON.stringify(data.user));
-        refreshFormalAccount();
-      }
-    }catch(err){
-      console.warn("登录状态校验失败：",err.message);
-    }
-  }
-})();
+checkFormalLoginStatus();
 renderChatList();
 renderMessages();
 
@@ -747,14 +736,23 @@ function safeParse(value,fallback){
   try{return JSON.parse(value || "") || fallback}catch{return fallback}
 }
 
+function requireLoginForCreation(feature="该功能"){
+  if(getFormalUser()&&getFormalToken())return true;
+  alert(`${feature}需要登录后使用。未登录可以继续使用文字聊天。`);
+  openFormalPage("account");
+  switchFormalAuth("login");
+  return false;
+}
+
 function setTaskMode(mode){
-  if(["image","video","drama"].includes(mode)&&!requireFormalLoginForFeature(mode==="image"?"图片生成":mode==="video"?"视频生成":"AI短剧"))return;
+  if(mode!=="chat"&&!requireLoginForCreation(mode==="image"?"图片生成":"视频生成"))return;
   taskMode.value=mode;
   updateModeUI();
   input.focus();
 }
 
 function openDirectPicker(){
+  if(!requireLoginForCreation("上传图片或视频"))return;
   mediaInput.accept="image/*,video/*,audio/*";
   mediaInput.multiple=true;
   mediaInput.click();
@@ -762,6 +760,7 @@ function openDirectPicker(){
 
 function selectQuickMode(mode){
   if(mode!=="image" && mode!=="video")return;
+  if(!requireLoginForCreation(mode==="image"?"图片生成":"视频生成"))return;
   forcedTaskMode = forcedTaskMode===mode ? null : mode;
   if(forcedTaskMode) taskMode.value=forcedTaskMode;
   else taskMode.value=detectAutoIntent();
@@ -770,6 +769,7 @@ function selectQuickMode(mode){
 }
 
 function toggleReferencePanel(){
+  if(!requireLoginForCreation("视频生成"))return;
   taskMode.value="video";
   updateModeUI();
   videoReferencePanel.classList.toggle("show");
@@ -777,6 +777,7 @@ function toggleReferencePanel(){
 
 function chooseAttachmentMode(mode){
   if(mode!=="image" && mode!=="video")return;
+  if(!requireLoginForCreation(mode==="image"?"图片生成":"视频生成"))return;
   forcedTaskMode=mode;
   taskMode.value=mode;
   updateModeUI();
@@ -1028,7 +1029,55 @@ function createConversation(){
 const FORMAL_API="https://jerry123.834833904.workers.dev";
 const FORMAL_TOKEN_KEY="jerry_formal_token";
 const FORMAL_USER_KEY="jerry_formal_user";
+const FORMAL_DEVICE_KEY="jerry_formal_device_id";
 let formalAuthMode="login";
+let formalSessionChecking=false;
+
+function createFormalDeviceId(){
+  try{
+    if(globalThis.crypto?.randomUUID)return globalThis.crypto.randomUUID();
+  }catch{}
+  const bytes=new Uint8Array(16);
+  try{globalThis.crypto?.getRandomValues?.(bytes)}catch{
+    for(let i=0;i<bytes.length;i++)bytes[i]=Math.floor(Math.random()*256);
+  }
+  return `device-${Date.now()}-${Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("")}`;
+}
+function isValidFormalDeviceId(value){
+  return /^[A-Za-z0-9._:-]{8,200}$/.test(String(value||""));
+}
+function getFormalDeviceId(){
+  let id=String(localStorage.getItem(FORMAL_DEVICE_KEY)||"").trim();
+  if(!isValidFormalDeviceId(id)){
+    id=createFormalDeviceId();
+    localStorage.setItem(FORMAL_DEVICE_KEY,id);
+  }
+  return id;
+}
+function resetFormalDeviceId(){
+  localStorage.removeItem(FORMAL_DEVICE_KEY);
+  return getFormalDeviceId();
+}
+
+function getFormalToken(){
+  return localStorage.getItem(FORMAL_TOKEN_KEY)||"";
+}
+
+function clearFormalSession(message=""){
+  localStorage.removeItem(FORMAL_TOKEN_KEY);
+  localStorage.removeItem(FORMAL_USER_KEY);
+  refreshFormalAccount();
+  if(message)alert(message);
+}
+
+function handleFormalUnauthorized(response,data){
+  if(response.status!==401)return false;
+  const message=data?.error||"登录已失效，请重新登录";
+  clearFormalSession(message);
+  openFormalPage("account");
+  switchFormalAuth("login");
+  return true;
+}
 
 function toggleFormalMenu(event){
   event?.stopPropagation();
@@ -1053,58 +1102,117 @@ function closeFormalPage(){document.querySelectorAll(".formal-page").forEach(pag
 
 function switchFormalAuth(mode){
   formalAuthMode=mode;
-  formalLoginTab.classList.toggle("active",mode==="login");
-  formalRegisterTab.classList.toggle("active",mode==="register");
-  formalNameRow.style.display=mode==="register"?"flex":"none";
-  formalAuthSubmit.textContent=mode==="register"?"注册":"登录";
-}
-
-
-function getFormalToken(){
-  return localStorage.getItem(FORMAL_TOKEN_KEY)||"";
-}
-function buildFormalHeaders(extraHeaders={},includeJson=true){
-  const headers={...(extraHeaders||{})};
-  if(includeJson&&!headers["Content-Type"])headers["Content-Type"]="application/json";
-  const token=getFormalToken();
-  if(token)headers.Authorization=`Bearer ${token}`;
-  return headers;
-}
-function requireFormalLoginForFeature(featureName="此功能"){
-  if(getFormalToken()&&getFormalUser())return true;
-  alert(`${featureName}需要先登录`);
-  openFormalPage("account");
-  return false;
-}
-async function handleFormalUnauthorized(response,data){
-  if(response.status!==401)return false;
-  localStorage.removeItem(FORMAL_TOKEN_KEY);
-  localStorage.removeItem(FORMAL_USER_KEY);
-  refreshFormalAccount();
-  alert(data?.error||"登录已过期，请重新登录");
-  openFormalPage("account");
-  return true;
+  const registering=mode==="register";
+  formalLoginTab.classList.toggle("active",!registering);
+  formalRegisterTab.classList.toggle("active",registering);
+  formalNameRow.style.display=registering?"flex":"none";
+  formalEmailCodeRow.style.display=registering?"flex":"none";
+  formalAccountLabel.textContent="邮箱";
+  formalEmail.placeholder="请输入邮箱";
+  formalAuthSubmit.textContent=registering?"注册":"登录";
 }
 
 async function formalApi(path,options={}){
-  const headers=buildFormalHeaders(options.headers||{},true);
-  const response=await fetch(FORMAL_API+path,Object.assign({},options,{headers}));
+  const token=getFormalToken();
+  const headers=Object.assign({"Content-Type":"application/json"},options.headers||{});
+  if(token)headers.Authorization=`Bearer ${token}`;
+  headers["X-Device-Id"]=getFormalDeviceId();
+  let response;
+  try{
+    response=await fetch(FORMAL_API+path,Object.assign({},options,{headers}));
+  }catch(error){
+    throw new Error("无法连接登录服务器，请确认后端已部署，并刷新网页后重试");
+  }
   const data=await response.json().catch(()=>({ok:false,error:`HTTP ${response.status}`}));
-  if(await handleFormalUnauthorized(response,data))throw new Error(data.error||"请先登录");
-  if(!response.ok||data.ok===false)throw new Error(data.error||`请求失败 HTTP ${response.status}`);
+  if(path!=="/api/auth/login"&&path!=="/api/auth/register"&&path!=="/api/auth/email/send"){
+    if(handleFormalUnauthorized(response,data))throw new Error(data.error||"请重新登录");
+  }
+  if(!response.ok||data.ok===false){
+    const message=data.error||`请求失败 HTTP ${response.status}`;
+    if(/设备信息无效|设备信息不一致/.test(message)&&!options.__deviceRetried){
+      resetFormalDeviceId();
+      return formalApi(path,{...options,__deviceRetried:true});
+    }
+    throw new Error(message);
+  }
   return data;
 }
 
+async function checkFormalLoginStatus(){
+  const token=getFormalToken();
+  if(!token){
+    refreshFormalAccount();
+    return false;
+  }
+  if(formalSessionChecking)return Boolean(getFormalUser());
+  formalSessionChecking=true;
+  const originalText=formalFunctionBtn?.textContent;
+  if(formalFunctionBtn)formalFunctionBtn.textContent="检查登录…";
+  try{
+    const data=await formalApi("/api/me",{method:"GET"});
+    if(data.user){
+      localStorage.setItem(FORMAL_USER_KEY,JSON.stringify(data.user));
+      refreshFormalAccount();
+      return true;
+    }
+    clearFormalSession();
+    return false;
+  }catch(err){
+    console.warn("自动登录状态检查失败：",err.message);
+    return false;
+  }finally{
+    formalSessionChecking=false;
+    if(formalFunctionBtn&&formalFunctionBtn.textContent==="检查登录…"){
+      formalFunctionBtn.textContent=getFormalUser()?.name||originalText||"功能";
+    }
+  }
+}
+
+let formalEmailCountdown=0,formalEmailTimer=null;
+async function sendFormalEmailCode(){
+  const email=String(formalEmail.value||"").trim().toLowerCase();
+  if(!/^\S+@\S+\.\S+$/.test(email))return alert("请输入有效邮箱");
+  formalEmailButton.disabled=true;
+  formalEmailButton.textContent="发送中…";
+  try{
+    const data=await formalApi("/api/auth/email/send",{
+      method:"POST",
+      body:JSON.stringify({email})
+    });
+    alert(data.message||"验证码已发送，请检查邮箱");
+    formalEmailCountdown=60;
+    clearInterval(formalEmailTimer);
+    formalEmailTimer=setInterval(()=>{
+      formalEmailCountdown--;
+      formalEmailButton.textContent=formalEmailCountdown>0?`${formalEmailCountdown}秒后重发`:"获取验证码";
+      formalEmailButton.disabled=formalEmailCountdown>0;
+      if(formalEmailCountdown<=0)clearInterval(formalEmailTimer);
+    },1000);
+  }catch(err){
+    formalEmailButton.disabled=false;
+    formalEmailButton.textContent="获取验证码";
+    alert(err.message);
+  }
+}
+
 async function submitFormalAuth(){
-  const email=formalEmail.value.trim();
+  const account=formalEmail.value.trim().toLowerCase();
   const password=formalPassword.value;
   const name=formalName.value.trim();
-  if(!email||password.length<8)return alert("请输入有效邮箱，密码至少8位");
+  const emailCode=String(formalEmailCode?.value||"").trim();
+  if(!/^\S+@\S+\.\S+$/.test(account))return alert("请输入有效邮箱");
+  if(formalAuthMode==="register"&&!/^\d{6}$/.test(emailCode)){
+    return alert("请输入6位邮箱验证码");
+  }
+  if(password.length<8)return alert("密码至少8位");
   formalAuthSubmit.disabled=true;
   formalAuthSubmit.textContent="处理中…";
   try{
     const path=formalAuthMode==="register"?"/api/auth/register":"/api/auth/login";
-    const payload=formalAuthMode==="register"?{email,password,name}:{email,password};
+    const deviceId=getFormalDeviceId();
+    const payload=formalAuthMode==="register"
+      ? {email:account,emailCode,password,name,deviceId}
+      : {account,password,deviceId};
     const data=await formalApi(path,{method:"POST",body:JSON.stringify(payload)});
     localStorage.setItem(FORMAL_TOKEN_KEY,data.token);
     localStorage.setItem(FORMAL_USER_KEY,JSON.stringify(data.user));
@@ -1126,6 +1234,7 @@ function refreshFormalAccount(){
   if(user){
     formalUserName.textContent=user.name||"-";
     formalUserEmail.textContent=user.email||"-";
+    formalUserPhone.textContent=user.phone?user.phone.replace(/^(\d{3})\d{4}(\d{4})$/,"$1****$2"):"-";
     formalUserRole.textContent=user.role||"user";
   }
 }
@@ -1142,11 +1251,15 @@ async function loadFormalWallet(){
     }
   }catch(err){formalBalance.textContent="读取失败";alert(err.message)}
 }
-function formalLogout(){
-  localStorage.removeItem(FORMAL_TOKEN_KEY);
-  localStorage.removeItem(FORMAL_USER_KEY);
-  refreshFormalAccount();
-  closeFormalPage();
+async function formalLogout(){
+  try{
+    if(getFormalToken())await formalApi("/api/auth/logout",{method:"POST",body:JSON.stringify({deviceId:getFormalDeviceId()})});
+  }catch(err){
+    console.warn("服务端退出失败：",err.message);
+  }finally{
+    clearFormalSession();
+    closeFormalPage();
+  }
 }
 
 function renderFormalCharacters(){
@@ -1589,7 +1702,7 @@ function getDramaEpisodeCount(){const s=document.getElementById("dramaEpisodeCou
 function setDramaProgress(message){const el=document.getElementById("dramaProgress");if(!el)return;el.style.display=message?"block":"none";el.textContent=message||""}
 function mergeDramaEpisodes(target,incoming){const map=new Map((target.episodes||[]).map(ep=>[Number(ep.number),ep]));for(const ep of incoming||[])map.set(Number(ep.number),ep);target.episodes=[...map.values()].sort((a,b)=>Number(a.number)-Number(b.number));return target}
 function openDramaPanel(){
-  if(!requireFormalLoginForFeature("AI短剧"))return;
+  if(!requireLoginForCreation("AI短剧"))return;
   const idea=document.getElementById("dramaIdea");
   if(idea && !idea.value.trim() && input.value.trim())idea.value=input.value.trim();
   document.getElementById("dramaMask")?.classList.add("show");
@@ -1598,12 +1711,13 @@ function closeDramaPanel(event){if(event && event.target!==event.currentTarget)r
 function extractJsonObject(v){let raw=String(v||"").trim().replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"").trim();const s=raw.indexOf("{");const e=raw.lastIndexOf("}");if(s<0||e<=s)throw new Error("模型没有返回可读取的JSON剧本");return JSON.parse(raw.slice(s,e+1));}
 function normalizeDramaProject(p,s){const eps=Array.isArray(p?.episodes)?p.episodes:[];if(!eps.length)throw new Error("没有生成分集内容");return{id:"drama_"+Date.now(),title:String(p.title||"未命名短剧"),synopsis:String(p.synopsis||p.summary||""),style:s.style,characters:Array.isArray(p.characters)?p.characters:[],episodes:eps.map((ep,i)=>({number:Number(ep.number)||i+1,title:String(ep.title||`第${i+1}集`),hook:String(ep.hook||ep.cliffhanger||""),summary:String(ep.summary||""),scenes:(Array.isArray(ep.scenes)?ep.scenes:[]).map((sc,j)=>({number:Number(sc.number)||j+1,duration:Math.min(15,Math.max(4,Number(sc.duration)||s.sceneSeconds)),prompt:String(sc.prompt||sc.visual_prompt||sc.description||""),narration:String(sc.narration||""),dialogue:String(sc.dialogue||""),characterIds:Array.isArray(sc.characterIds)?sc.characterIds.map(String):[],mainCharacterId:String(sc.mainCharacterId||(Array.isArray(sc.characterIds)&&sc.characterIds[0])||"")}))}))};}
 async function createDramaPlan(){
+  if(!requireLoginForCreation("AI短剧"))return;
   const idea=document.getElementById("dramaIdea").value.trim();if(!idea)return alert("请填写故事创意");
   const episodeCount=getDramaEpisodeCount(),episodeSeconds=Number(document.getElementById("dramaEpisodeSeconds").value)||60,sceneSeconds=Math.min(15,Number(document.getElementById("dramaSceneSeconds").value)||15),style=document.getElementById("dramaStyle").value,batchSize=Math.max(1,Math.min(10,Number(document.getElementById("dramaBatchSize")?.value)||10)),sceneCount=Math.max(2,Math.ceil(episodeSeconds/sceneSeconds)),btn=document.getElementById("dramaSubmit"),continueBtn=document.getElementById("dramaContinue");
   btn.disabled=true;btn.textContent="正在生成全剧大纲…";if(continueBtn)continueBtn.style.display="none";setDramaProgress(`正在规划 ${episodeCount} 集短剧…`);
   try{
     const prompt=`你是专业竖屏短剧总编剧。根据用户创意规划一部共${episodeCount}集的短剧，只生成全剧大纲，不生成详细分镜。风格：${style}；每集约${episodeSeconds}秒。每集必须有标题、剧情摘要、结尾悬念；人物关系和时间线连续；前3集快速建立冲突，中段持续升级，最后5集收束主线。只返回合法JSON，不要Markdown。格式：{"title":"剧名","synopsis":"总梗概","characters":[{"id":"CHAR_1","name":"姓名","description":"身份性格","appearance":"固定年龄、五官、脸型、发型、身材","costume":"默认固定服装"}],"episodes":[{"number":1,"title":"标题","summary":"本集剧情","hook":"结尾悬念"}]}。每个角色必须有稳定唯一id，例如CHAR_1、CHAR_2。用户创意：${idea}`;
-    const data=await postJson(CHAT_WORKER_URL,{type:"text",model:currentChatModel,chatModel:currentChatModel,mode:"reasoner",messages:[{role:"user",content:prompt}]});
+    const data=await postJson(CHAT_WORKER_URL,{type:"text",feature:"drama",model:currentChatModel,chatModel:currentChatModel,mode:"reasoner",messages:[{role:"user",content:prompt}]});
     const outline=extractJsonObject(data.reply||"");if(!Array.isArray(outline.episodes)||!outline.episodes.length)throw new Error("没有生成有效的分集大纲");
     const dramaVideoResolution=document.getElementById("dramaVideoResolution")?.value||"720p",dramaVideoRatio=document.getElementById("dramaVideoRatio")?.value||"9:16",dramaVideoFps=Number(document.getElementById("dramaVideoFps")?.value)||24,dramaGenerateAudio=document.getElementById("dramaGenerateAudio")?.checked!==false,dramaWatermark=document.getElementById("dramaWatermark")?.checked===true,autoCharacterBoard=document.getElementById("dramaAutoCharacterBoard")?.checked!==false,autoAllBatches=document.getElementById("dramaAutoAllBatches")?.checked!==false,stableDirector=document.getElementById("dramaStableDirector")?.checked!==false;currentDramaGeneration={autoCharacterBoard,autoAllBatches,stableDirector,idea,episodeCount,episodeSeconds,sceneSeconds,sceneCount,style,batchSize,outline,nextStart:1,videoResolution:dramaVideoResolution,videoRatio:dramaVideoRatio,videoFps:dramaVideoFps,generateAudio:dramaGenerateAudio,watermark:dramaWatermark,project:{id:"drama_"+Date.now(),title:String(outline.title||"未命名短剧"),synopsis:String(outline.synopsis||""),style,episodeSeconds,sceneSeconds,videoResolution:dramaVideoResolution,videoRatio:dramaVideoRatio,videoFps:dramaVideoFps,generateAudio:dramaGenerateAudio,watermark:dramaWatermark,createdAt:Date.now(),totalEpisodes:episodeCount,generatedEpisodes:0,characters:(Array.isArray(outline.characters)?outline.characters:[]).map((c,i)=>({id:String(c.id||c.characterId||`CHAR_${i+1}`),name:String(c.name||`角色${i+1}`),description:String(c.description||""),appearance:String(c.appearance||c.look||""),costume:String(c.costume||""),referenceImage:String(c.referenceImage||""),status:c.referenceImage?"ready":"empty",sourceImage:String(c.sourceImage||""),identityBoard:String(c.identityBoard||""),referenceImages:Array.isArray(c.referenceImages)?c.referenceImages.filter(Boolean):[c.referenceImage].filter(Boolean),strictLock:true,locks:{face:true,age:true,hair:true,body:true,costume:true}})),episodes:[]}};
     if(currentDramaGeneration.autoCharacterBoard){
@@ -1622,7 +1736,7 @@ async function generateDramaBatch(){
   try{
     const outlineSlice=(state.outline.episodes||[]).filter(ep=>Number(ep.number)>=startEpisode&&Number(ep.number)<=endEpisode);
     const prompt=`你是专业竖屏短剧分镜导演。根据下方全剧设定，为第${startEpisode}到第${endEpisode}集生成详细分镜。每集约${state.episodeSeconds}秒，每集严格拆成${state.sceneCount}个镜头；每个镜头duration必须在4到${state.sceneSeconds}秒之间，绝不能超过15秒。画面风格：${state.style}。人物外貌、服装和场景必须连续一致。每个prompt直接用于Seedance，写清人物、动作、场景、镜头、光线和风格。只返回合法JSON，不要Markdown。格式：{"episodes":[{"number":1,"title":"标题","summary":"剧情","hook":"悬念","scenes":[{"number":1,"duration":10,"characterIds":["CHAR_1","CHAR_2"],"mainCharacterId":"CHAR_1","prompt":"视频提示词","narration":"旁白","dialogue":"对白"}]}]}。每个镜头必须返回characterIds和mainCharacterId，只能引用现有角色id。稳定导演模式：一个镜头只允许一个主角色正脸清晰；其他角色使用侧脸、背影、越肩或景深虚化，避免混脸。双人对话必须拆成正反打单人特写，不允许两个人同时正脸占据画面。连续镜头中角色服装、发型、场景光线和空间方向不得跳变。prompt必须重复主角色固定外貌、发型和服装。剧名：${state.outline.title}。总梗概：${state.outline.synopsis}。人物设定：${JSON.stringify(state.project.characters||state.outline.characters||[])}。本批分集大纲：${JSON.stringify(outlineSlice)}`;
-    const data=await postJson(CHAT_WORKER_URL,{type:"text",model:currentChatModel,chatModel:currentChatModel,mode:"reasoner",messages:[{role:"user",content:prompt}]});
+    const data=await postJson(CHAT_WORKER_URL,{type:"text",feature:"drama",model:currentChatModel,chatModel:currentChatModel,mode:"reasoner",messages:[{role:"user",content:prompt}]});
     const parsed=extractJsonObject(data.reply||"");
     const normalized=normalizeDramaProject({title:state.project.title,synopsis:state.project.synopsis,characters:state.project.characters,episodes:parsed.episodes||[]},{sceneSeconds:state.sceneSeconds,style:state.style});
     mergeDramaEpisodes(state.project,normalized.episodes);state.project.generatedEpisodes=state.project.episodes.length;state.nextStart=endEpisode+1;
@@ -1714,18 +1828,19 @@ function dataUrlToFile(dataUrl,filename="character.jpg"){
 }
 
 async function uploadCharacterImageFile(file){
-  if(!requireFormalLoginForFeature("上传角色照片"))throw new Error("请先登录");
   const form=new FormData();
   form.append("file",file,file.name||"character.jpg");
+  const token=localStorage.getItem(FORMAL_TOKEN_KEY);
   const response=await fetch(MEDIA_WORKER_URL.replace(/\/+$/,"")+"/upload",{
     method:"POST",
-    headers:buildFormalHeaders({},false),
+    headers:token?{Authorization:`Bearer ${token}`,"X-Device-Id":getFormalDeviceId()}:{"X-Device-Id":getFormalDeviceId()},
     body:form
   });
   let data={};
   try{data=await response.json()}catch{
     throw new Error(`角色图片上传接口返回异常，HTTP ${response.status}`);
   }
+  if(handleFormalUnauthorized(response,data))throw new Error(data.error||"请重新登录");
   if(!response.ok||data.ok===false)throw new Error(data.error||`角色图片上传失败，HTTP ${response.status}`);
   if(!data.url)throw new Error("角色图片上传成功，但没有返回公网URL");
   return data.url;
@@ -2028,6 +2143,7 @@ function resetComposerAfterSubmit(){
 }
 
 async function generateImage(){
+  if(!requireLoginForCreation("图片生成"))return;
   const prompt=input.value.trim();
   const referenceImage=selectedImageBase64;
   if(!prompt){
@@ -2097,6 +2213,7 @@ async function generateImage(){
 }
 
 async function generateVideo(){
+  if(!requireLoginForCreation("视频生成"))return;
   const prompt=input.value.trim();
   if(!prompt){
     alert("请先写视频提示词。");
@@ -2254,13 +2371,14 @@ function countReferences(files,references){
 }
 
 async function uploadReferenceFile(file){
-  if(!requireFormalLoginForFeature("上传图片或视频素材"))throw new Error("请先登录");
   const form=new FormData();
   form.append("file",file,file.name);
   const url=MEDIA_WORKER_URL.replace(/\/+$/,"")+"/upload";
-  const res=await fetch(url,{method:"POST",headers:buildFormalHeaders({},false),body:form});
+  const token=localStorage.getItem(FORMAL_TOKEN_KEY);
+  const res=await fetch(url,{method:"POST",headers:token?{Authorization:`Bearer ${token}`,"X-Device-Id":getFormalDeviceId()}:{"X-Device-Id":getFormalDeviceId()},body:form});
   let data={};
   try{data=await res.json()}catch{throw new Error(`上传接口返回了非 JSON 内容，HTTP ${res.status}`)}
+  if(handleFormalUnauthorized(res,data))throw new Error(data.error||"请重新登录");
   if(!res.ok || data.ok===false)throw new Error(data.error || `素材上传失败，HTTP ${res.status}`);
   if(!data.url || !data.type)throw new Error("素材上传成功，但没有返回可用 URL");
   return data;
@@ -2339,22 +2457,18 @@ function videoStatusText(status,error,elapsedSeconds){
 }
 
 async function postJson(url,payload){
-  const isProtectedMedia=["generate_image","generate_video","video_status","drama_outline","drama_batch","chat_image"].includes(String(payload?.type||""));
-  if(isProtectedMedia&&!requireFormalLoginForFeature(
-    payload?.type==="generate_image"?"图片生成":
-    payload?.type==="generate_video"||payload?.type==="video_status"?"视频生成":
-    payload?.type==="drama_outline"||payload?.type==="drama_batch"?"AI短剧":"图片识别"
-  ))throw new Error("请先登录");
-
+  const token=getFormalToken();
+  const headers={"Content-Type":"application/json","X-Device-Id":getFormalDeviceId()};
+  if(token)headers.Authorization=`Bearer ${token}`;
   const res=await fetch(url,{
     method:"POST",
-    headers:buildFormalHeaders({},true),
+    headers,
     body:JSON.stringify(payload)
   });
 
   let data={};
   try{data=await res.json()}catch{throw new Error(`服务器返回了非 JSON 内容，HTTP ${res.status}`)}
-  if(await handleFormalUnauthorized(res,data))throw new Error(data.error||"请先登录");
+  if(handleFormalUnauthorized(res,data))throw new Error(data.error||"请重新登录");
   if(!res.ok || data.ok===false)throw new Error(data.error || data.message || `请求失败，HTTP ${res.status}`);
   return data;
 }
