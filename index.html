@@ -5,12 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Jerry AI</title>
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
-document.addEventListener("keydown",event=>{
-  if(event.key==="Escape" && isMessageSelectionMode)cancelMessageSelection();
-});
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
 <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
 
@@ -293,7 +288,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
       <div class="mode-settings">
         <div id="imageSettings" class="setting-group">
           <span class="setting-label">图片设置</span>
-          <select id="imageResolution" class="small-select" title="图片分辨率">
+          <select id="imageResolution" onchange="updatePricePreview()" class="small-select" title="图片分辨率">
             <option value="1080p">高清 1080P</option>
             <option value="2K" selected>超清 2K</option>
             <option value="4K">极清 4K</option>
@@ -307,16 +302,17 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
             <option value="3:4">3:4 竖图</option>
           </select>
           <label class="toggle-label"><input id="imageWatermark" type="checkbox"> 水印</label>
+          <span id="imagePricePreview" class="setting-label" style="font-weight:800">价格：加载中...</span>
         </div>
 
         <div id="videoSettings" class="setting-group">
           <span class="setting-label">视频设置</span>
-          <select id="videoModel" class="small-select" title="视频模型" onchange="applyVideoModelLimits()">
+          <select id="videoModel" class="small-select" title="视频模型" onchange="applyVideoModelLimits();updatePricePreview()">
             <option value="seedance_20" selected>Seedance 2.0 标准版</option>
             <option value="seedance_20_fast">Seedance 2.0 Fast</option>
             <option value="seedance_20_mini">Seedance 2.0 Mini</option>
           </select>
-          <select id="videoResolution" class="small-select" title="视频质量">
+          <select id="videoResolution" onchange="updatePricePreview()" class="small-select" title="视频质量">
             <option value="480p">流畅 480P</option>
             <option value="720p" selected>高清 720P</option>
             <option value="1080p">全高清 1080P</option>
@@ -330,7 +326,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
             <option value="3:4">3:4</option>
             <option value="21:9">21:9 超宽屏</option>
           </select>
-          <select id="videoDuration" class="small-select">
+          <select id="videoDuration" onchange="updatePricePreview()" class="small-select">
             <option value="4">4 秒</option>
             <option value="5">5 秒</option>
             <option value="8">8 秒</option>
@@ -345,6 +341,7 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
           <label class="toggle-label"><input id="videoAudio" type="checkbox" checked> 生成音频</label>
           <label class="toggle-label"><input id="videoWatermark" type="checkbox"> 水印</label>
           <button type="button" class="small-btn" onclick="toggleReferencePanel()">🔗 素材 URL</button>
+          <span id="videoPricePreview" class="setting-label" style="font-weight:800">价格：加载中...</span>
         </div>
       </div>
 
@@ -502,12 +499,12 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
   <div class="formal-page-header"><button class="formal-back" onclick="closeFormalPage()">← 返回主页</button><div class="formal-page-title">设置</div></div>
   <div class="formal-page-body"><div class="formal-card"><div class="formal-account-line"><span>后端地址</span><b>jerry123 Worker</b></div><div class="formal-account-line"><span>人物稳定模式</span><b>已开启</b></div><div class="formal-account-line"><span>自动身份板</span><b>已开启</b></div></div></div>
 </div>
-<div id="dramaMask" class="drama-mask" onclick="closeDramaPanel(event)"><div class="drama-panel" onclick="event.stopPropagation()"><div class="drama-head"><div class="drama-title">🎞 AI短剧</div><button class="drama-close" onclick="closeDramaPanel()">×</button></div><div class="drama-grid"><div class="drama-field full"><label>故事创意或小说内容</label><textarea id="dramaIdea" placeholder="例如：男主的女朋友突然离世，他把她的意识以量子形态保存。二十年后，他将意识植入机器人……"></textarea></div><div class="drama-field"><label>总集数</label><select id="dramaEpisodeCount" onchange="toggleCustomEpisodeCount()"><option value="3">3 集（测试）</option><option value="5">5 集</option><option value="10">10 集</option><option value="20" selected>20 集</option><option value="30">30 集</option><option value="50">50 集</option><option value="80">80 集</option><option value="100">100 集</option><option value="custom">自定义</option></select><input id="dramaCustomEpisodeCount" type="number" min="1" max="200" value="100" style="display:none;margin-top:8px" placeholder="输入1-200集"></div><div class="drama-field"><label>分批生成</label><select id="dramaBatchSize"><option value="5">每批5集</option><option value="10" selected>每批10集</option></select></div><div class="drama-field"><label>每集时长</label><select id="dramaEpisodeSeconds"><option value="30">约30秒</option><option value="60" selected>约60秒</option><option value="90">约90秒</option></select></div><div class="drama-field"><label>画面风格</label><select id="dramaStyle"><option>电影写实</option><option>都市短剧</option><option>科幻电影</option><option>国漫</option><option>日漫</option><option>3D动画</option></select></div><div class="drama-field"><label>单镜头最长</label><select id="dramaSceneSeconds"><option value="8">8秒</option><option value="10">10秒</option><option value="15" selected>15秒</option></select></div><div class="drama-field"><label>视频清晰度</label><select id="dramaVideoResolution"><option value="480p">流畅 480P</option><option value="720p" selected>高清 720P</option><option value="1080p">超清 1080P</option></select></div><div class="drama-field"><label>视频尺寸</label><select id="dramaVideoRatio"><option value="9:16" selected>9:16 竖屏短剧</option><option value="16:9">16:9 横屏</option><option value="1:1">1:1 方形</option><option value="4:3">4:3 横屏</option><option value="3:4">3:4 竖屏</option></select></div><div class="drama-field"><label>视频帧率</label><select id="dramaVideoFps"><option value="24" selected>24 FPS 电影感</option><option value="60">60 FPS 流畅</option></select></div><div class="drama-field full"><div class="drama-check-row"><label><input id="dramaGenerateAudio" type="checkbox" checked> 生成音频</label><label><input id="dramaWatermark" type="checkbox"> 水印</label></div></div>
+<div id="dramaMask" class="drama-mask" onclick="closeDramaPanel(event)"><div class="drama-panel" onclick="event.stopPropagation()"><div class="drama-head"><div class="drama-title">🎞 AI短剧</div><button class="drama-close" onclick="closeDramaPanel()">×</button></div><div class="drama-grid"><div class="drama-field full"><label>故事创意或小说内容</label><textarea id="dramaIdea" placeholder="例如：男主的女朋友突然离世，他把她的意识以量子形态保存。二十年后，他将意识植入机器人……"></textarea></div><div class="drama-field"><label>总集数</label><select id="dramaEpisodeCount" onchange="updatePricePreview()" onchange="toggleCustomEpisodeCount()"><option value="3">3 集（测试）</option><option value="5">5 集</option><option value="10">10 集</option><option value="20" selected>20 集</option><option value="30">30 集</option><option value="50">50 集</option><option value="80">80 集</option><option value="100">100 集</option><option value="custom">自定义</option></select><input id="dramaCustomEpisodeCount" type="number" min="1" max="200" value="100" style="display:none;margin-top:8px" placeholder="输入1-200集"></div><div class="drama-field"><label>分批生成</label><select id="dramaBatchSize"><option value="5">每批5集</option><option value="10" selected>每批10集</option></select></div><div class="drama-field"><label>每集时长</label><select id="dramaEpisodeSeconds" onchange="updatePricePreview()"><option value="30">约30秒</option><option value="60" selected>约60秒</option><option value="90">约90秒</option></select></div><div class="drama-field"><label>画面风格</label><select id="dramaStyle"><option>电影写实</option><option>都市短剧</option><option>科幻电影</option><option>国漫</option><option>日漫</option><option>3D动画</option></select></div><div class="drama-field"><label>单镜头最长</label><select id="dramaSceneSeconds" onchange="updatePricePreview()"><option value="8">8秒</option><option value="10">10秒</option><option value="15" selected>15秒</option></select></div><div class="drama-field"><label>视频清晰度</label><select id="dramaVideoResolution" onchange="updatePricePreview()"><option value="480p">流畅 480P</option><option value="720p" selected>高清 720P</option><option value="1080p">超清 1080P</option></select></div><div class="drama-field"><label>视频尺寸</label><select id="dramaVideoRatio"><option value="9:16" selected>9:16 竖屏短剧</option><option value="16:9">16:9 横屏</option><option value="1:1">1:1 方形</option><option value="4:3">4:3 横屏</option><option value="3:4">3:4 竖屏</option></select></div><div class="drama-field"><label>视频帧率</label><select id="dramaVideoFps"><option value="24" selected>24 FPS 电影感</option><option value="60">60 FPS 流畅</option></select></div><div class="drama-field full"><div class="drama-check-row"><label><input id="dramaGenerateAudio" type="checkbox" checked> 生成音频</label><label><input id="dramaWatermark" type="checkbox"> 水印</label></div></div>
 <div class="drama-field full"><div class="drama-check-row">
 <label><input id="dramaAutoCharacterBoard" type="checkbox" checked> 自动生成角色四视图身份板</label>
 <label><input id="dramaAutoAllBatches" type="checkbox" checked> 自动生成全部分镜批次</label>
 <label><input id="dramaStableDirector" type="checkbox" checked> 稳定导演模式</label>
-</div></div></div><button id="dramaSubmit" class="drama-submit" onclick="createDramaPlan()">生成分集与分镜</button><div id="dramaProgress" class="drama-note" style="display:none;margin-top:12px"></div><button id="dramaContinue" class="drama-submit" style="display:none;background:#444" onclick="continueDramaGeneration()">继续生成下一批</button><div class="drama-note">全自动稳定模式会依次完成：全剧大纲 → 角色四视图身份板 → 全部分镜批次。角色身份板会产生图片费用；视频仍需在确认后提交Seedance。每个镜头不超过15秒。</div></div></div>
+</div></div></div><div id="dramaPricePreview" class="drama-note" style="font-weight:800;margin-bottom:10px">预计视频费用：加载中...</div><button id="dramaSubmit" class="drama-submit" onclick="createDramaPlan()">生成分集与分镜</button><div id="dramaProgress" class="drama-note" style="display:none;margin-top:12px"></div><button id="dramaContinue" class="drama-submit" style="display:none;background:#444" onclick="continueDramaGeneration()">继续生成下一批</button><div class="drama-note">全自动稳定模式会依次完成：全剧大纲 → 角色四视图身份板 → 全部分镜批次。角色身份板会产生图片费用；视频仍需在确认后提交Seedance。每个镜头不超过15秒。</div></div></div>
 
 
 <div id="characterLibraryMask" class="character-library-mask" onclick="closeCharacterLibrary(event)">
@@ -555,6 +552,13 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 </div>
 
 <script>
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape" && typeof isMessageSelectionMode!=="undefined" && isMessageSelectionMode){
+    cancelMessageSelection();
+  }
+});
+
+
 const WORKER_URL = "https://jerry123.834833904.workers.dev";
 const CHAT_WORKER_URL = WORKER_URL;
 const MEDIA_WORKER_URL = WORKER_URL;
@@ -638,11 +642,11 @@ const selectedMessages=new Set();
 
 if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 
+let pricingConfig=null;
+
 updateChatModelUI();
 applyVideoModelLimits();
 updateModeUI();
-refreshFormalAccount();
-checkFormalLoginStatus();
 renderChatList();
 renderMessages();
 
@@ -778,6 +782,112 @@ function selectChatModel(model){
   input.focus();
 }
 
+
+
+async function loadPricingConfig(){
+  try{
+    const data=await formalApi("/api/pricing");
+    pricingConfig=data.pricing||{};
+    updatePricePreview();
+    return data;
+  }catch(error){
+    console.warn("价格加载失败",error);
+    return null;
+  }
+}
+
+function pnum(key,fallback=0){
+  const n=Number(pricingConfig?.[key]);
+  return Number.isFinite(n)?n:fallback;
+}
+
+function currentHasImageReference(){
+  if(selectedImageBase64)return true;
+  if(selectedVideoFiles.some(file=>getFileMediaType(file)==="image"))return true;
+  try{
+    return collectUrlReferences().some(r=>r.type==="image");
+  }catch{
+    return false;
+  }
+}
+
+function calculateClientImagePrice(){
+  const res=String(document.getElementById("imageResolution")?.value||"2K").toLowerCase();
+  const resKey=res==="1080p"?"1080p":res==="4k"?"4k":"2k";
+  const type=selectedImageBase64?"ref":"text";
+  return Math.round(pnum(`image_${type}_${resKey}`,2.6)*100)/100;
+}
+
+function calculateClientVideoPrice({drama=false,duration=null,resolution=null,modelKey=null,hasImage=null}={}){
+  const model=String(modelKey||document.getElementById("videoModel")?.value||"seedance_20");
+  const group=model.includes("fast")?"fast":model.includes("mini")?"mini":"standard";
+  let res=String(resolution||document.getElementById("videoResolution")?.value||"720p").toLowerCase();
+  if(group!=="standard"&&!["480p","720p"].includes(res))res="720p";
+  const type=(hasImage===null?currentHasImageReference():hasImage)?"image":"text";
+  const rate=pnum(`video_${group}_${res}_${type}`,pnum(`video_${group}_${res}_image`,0.99));
+  const seconds=Number(duration||document.getElementById("videoDuration")?.value||5);
+  let amount=Math.max(pnum("minimum_charge",2),rate*seconds);
+  if(drama)amount*=pnum("drama_multiplier",1);
+  return Math.round(amount*100)/100;
+}
+
+function calculateDramaEstimate(){
+  const episodes=Number(document.getElementById("dramaEpisodeCount")?.value==="custom"
+    ? document.getElementById("dramaCustomEpisodeCount")?.value||1
+    : document.getElementById("dramaEpisodeCount")?.value||1);
+  const episodeSeconds=Number(document.getElementById("dramaEpisodeSeconds")?.value||60);
+  const sceneSeconds=Number(document.getElementById("dramaSceneSeconds")?.value||15);
+  const resolution=document.getElementById("dramaVideoResolution")?.value||"720p";
+  const scenesPerEpisode=Math.max(1,Math.ceil(episodeSeconds/sceneSeconds));
+  const oneScene=calculateClientVideoPrice({
+    drama:true,
+    duration:Math.min(15,sceneSeconds),
+    resolution,
+    modelKey:document.getElementById("videoModel")?.value||"seedance_20",
+    hasImage:true
+  });
+  return Math.round(oneScene*scenesPerEpisode*episodes*100)/100;
+}
+
+function updatePricePreview(){
+  if(!pricingConfig)return;
+  const image=document.getElementById("imagePricePreview");
+  const video=document.getElementById("videoPricePreview");
+  const drama=document.getElementById("dramaPricePreview");
+  if(image)image.textContent=`价格：¥${calculateClientImagePrice().toFixed(2)}`;
+  if(video)video.textContent=`预计：¥${calculateClientVideoPrice().toFixed(2)}`;
+  if(drama)drama.textContent=`预计视频费用：¥${calculateDramaEstimate().toFixed(2)}（角色图片另计）`;
+}
+
+async function ensureBalanceForAmount(amount,feature){
+  const data=await formalApi("/api/wallet");
+  const balance=Number(data.balance||0);
+  if(balance<=0){
+    alert(`余额为0，无法${feature}，请先充值。`);
+    openFormalPage("wallet");
+    return false;
+  }
+  if(balance+1e-9<amount){
+    alert(`余额不足，本次${feature}预计需要 ¥${amount.toFixed(2)}，当前余额 ¥${balance.toFixed(2)}`);
+    openFormalPage("wallet");
+    return false;
+  }
+  return true;
+}
+
+async function refreshWalletAfterCharge(){
+  try{
+    const data=await formalApi("/api/wallet");
+    const el=document.getElementById("formalBalance");
+    if(el)el.textContent=`¥${Number(data.balance||0).toFixed(2)}`;
+    const user=getFormalUser();
+    if(user){
+      user.balance=Number(data.balance||0);
+      localStorage.setItem(FORMAL_USER_KEY,JSON.stringify(user));
+    }
+  }catch{}
+}
+
 function applyVideoModelLimits(){
   const model=document.getElementById("videoModel")?.value||"seedance_20";
   const resolution=document.getElementById("videoResolution");
@@ -793,6 +903,7 @@ function applyVideoModelLimits(){
     fps.value="24";
     [...fps.options].forEach(opt=>opt.disabled=opt.value!=="24");
   }
+  updatePricePreview();
 }
 
 function updateChatModelUI(){
@@ -1062,6 +1173,7 @@ function updateModeUI(){
     welcomeText.textContent="";
   }
   updatePreviewRole();
+  updatePricePreview();
 }
 
 function updatePreviewRole(){
@@ -1116,7 +1228,21 @@ const FORMAL_API="https://jerry123.834833904.workers.dev";
 const FORMAL_TOKEN_KEY="jerry_formal_token";
 const FORMAL_USER_KEY="jerry_formal_user";
 const FORMAL_DEVICE_KEY="jerry_formal_device_id";
+
 let formalAuthMode="login";
+
+const formalLoginTabEl=document.getElementById("formalLoginTab");
+const formalRegisterTabEl=document.getElementById("formalRegisterTab");
+const formalNameRowEl=document.getElementById("formalNameRow");
+const formalEmailCodeRowEl=document.getElementById("formalEmailCodeRow");
+const formalAccountLabelEl=document.getElementById("formalAccountLabel");
+const formalEmailEl=document.getElementById("formalEmail");
+const formalPasswordEl=document.getElementById("formalPassword");
+const formalNameEl=document.getElementById("formalName");
+const formalEmailCodeEl=document.getElementById("formalEmailCode");
+const formalEmailButtonEl=document.getElementById("formalEmailButton");
+const formalAuthSubmitEl=document.getElementById("formalAuthSubmit");
+
 let formalSessionChecking=false;
 
 function createFormalDeviceId(){
@@ -1188,15 +1314,17 @@ function openFormalPage(name){
 function closeFormalPage(){document.querySelectorAll(".formal-page").forEach(page=>page.classList.remove("show"))}
 
 function switchFormalAuth(mode){
-  formalAuthMode=mode;
-  const registering=mode==="register";
-  formalLoginTab.classList.toggle("active",!registering);
-  formalRegisterTab.classList.toggle("active",registering);
-  formalNameRow.style.display=registering?"flex":"none";
-  formalEmailCodeRow.style.display=registering?"flex":"none";
-  formalAccountLabel.textContent="邮箱";
-  formalEmail.placeholder="请输入邮箱";
-  formalAuthSubmit.textContent=registering?"注册":"登录";
+  formalAuthMode=mode==="register"?"register":"login";
+  const registering=formalAuthMode==="register";
+
+  formalLoginTabEl?.classList.toggle("active",!registering);
+  formalRegisterTabEl?.classList.toggle("active",registering);
+
+  if(formalNameRowEl)formalNameRowEl.style.display=registering?"flex":"none";
+  if(formalEmailCodeRowEl)formalEmailCodeRowEl.style.display=registering?"flex":"none";
+  if(formalAccountLabelEl)formalAccountLabelEl.textContent="邮箱";
+  if(formalEmailEl)formalEmailEl.placeholder="请输入邮箱";
+  if(formalAuthSubmitEl)formalAuthSubmitEl.textContent=registering?"注册":"登录";
 }
 
 async function formalApi(path,options={}){
@@ -1211,7 +1339,8 @@ async function formalApi(path,options={}){
     throw new Error("无法连接登录服务器，请确认后端已部署，并刷新网页后重试");
   }
   const data=await response.json().catch(()=>({ok:false,error:`HTTP ${response.status}`}));
-  if(path!=="/api/auth/login"&&path!=="/api/auth/register"&&path!=="/api/auth/email/send"){
+  const isPublicAuthPath=path.startsWith("/api/auth/");
+  if(!isPublicAuthPath){
     if(handleFormalUnauthorized(response,data))throw new Error(data.error||"请重新登录");
   }
   if(!response.ok||data.ok===false){
@@ -1350,57 +1479,101 @@ async function checkFormalLoginStatus(){
 
 let formalEmailCountdown=0,formalEmailTimer=null;
 async function sendFormalEmailCode(){
-  const email=String(formalEmail.value||"").trim().toLowerCase();
+  const email=String(formalEmailEl?.value||"").trim().toLowerCase();
   if(!/^\S+@\S+\.\S+$/.test(email))return alert("请输入有效邮箱");
-  formalEmailButton.disabled=true;
-  formalEmailButton.textContent="发送中…";
+
+  if(formalEmailButtonEl){
+    formalEmailButtonEl.disabled=true;
+    formalEmailButtonEl.textContent="发送中…";
+  }
+
   try{
     const data=await formalApi("/api/auth/email/send",{
       method:"POST",
       body:JSON.stringify({email})
     });
+
     alert(data.message||"验证码已发送，请检查邮箱");
     formalEmailCountdown=60;
     clearInterval(formalEmailTimer);
+
     formalEmailTimer=setInterval(()=>{
       formalEmailCountdown--;
-      formalEmailButton.textContent=formalEmailCountdown>0?`${formalEmailCountdown}秒后重发`:"获取验证码";
-      formalEmailButton.disabled=formalEmailCountdown>0;
+      if(formalEmailButtonEl){
+        formalEmailButtonEl.textContent=formalEmailCountdown>0?`${formalEmailCountdown}秒后重发`:"获取验证码";
+        formalEmailButtonEl.disabled=formalEmailCountdown>0;
+      }
       if(formalEmailCountdown<=0)clearInterval(formalEmailTimer);
     },1000);
   }catch(err){
-    formalEmailButton.disabled=false;
-    formalEmailButton.textContent="获取验证码";
+    if(formalEmailButtonEl){
+      formalEmailButtonEl.disabled=false;
+      formalEmailButtonEl.textContent="获取验证码";
+    }
     alert(err.message);
   }
 }
 
 async function submitFormalAuth(){
-  const account=formalEmail.value.trim().toLowerCase();
-  const password=formalPassword.value;
-  const name=formalName.value.trim();
-  const emailCode=String(formalEmailCode?.value||"").trim();
+  const account=String(formalEmailEl?.value||"").trim().toLowerCase();
+  const password=String(formalPasswordEl?.value||"");
+  const name=String(formalNameEl?.value||"").trim();
+  const emailCode=String(formalEmailCodeEl?.value||"").trim();
+
   if(!/^\S+@\S+\.\S+$/.test(account))return alert("请输入有效邮箱");
   if(formalAuthMode==="register"&&!/^\d{6}$/.test(emailCode)){
     return alert("请输入6位邮箱验证码");
   }
   if(password.length<8)return alert("密码至少8位");
-  formalAuthSubmit.disabled=true;
-  formalAuthSubmit.textContent="处理中…";
+
+  if(formalAuthSubmitEl){
+    formalAuthSubmitEl.disabled=true;
+    formalAuthSubmitEl.textContent="处理中…";
+  }
+
   try{
     const path=formalAuthMode==="register"?"/api/auth/register":"/api/auth/login";
     const deviceId=getFormalDeviceId();
     const payload=formalAuthMode==="register"
       ? {email:account,emailCode,password,name,deviceId}
       : {account,password,deviceId};
-    const data=await formalApi(path,{method:"POST",body:JSON.stringify(payload)});
+
+    const data=await formalApi(path,{
+      method:"POST",
+      body:JSON.stringify(payload)
+    });
+
+    if(!data?.token||!data?.user){
+      throw new Error("登录服务器返回数据不完整");
+    }
+
     localStorage.setItem(FORMAL_TOKEN_KEY,data.token);
     localStorage.setItem(FORMAL_USER_KEY,JSON.stringify(data.user));
     refreshFormalAccount();
+
+    // 登录成功后再加载价格和同步历史，不影响登录本身。
+    Promise.resolve().then(()=>loadPricingConfig()).catch(()=>{});
+    Promise.resolve().then(()=>syncLocalChatHistoryToAccount()).catch(()=>{});
+
     alert(formalAuthMode==="register"?"注册成功":"登录成功");
-  }catch(err){alert(err.message)}
-  finally{formalAuthSubmit.disabled=false;formalAuthSubmit.textContent=formalAuthMode==="register"?"注册":"登录"}
+    closeFormalPage();
+  }catch(err){
+    alert(err?.message||"登录失败");
+  }finally{
+    if(formalAuthSubmitEl){
+      formalAuthSubmitEl.disabled=false;
+      formalAuthSubmitEl.textContent=formalAuthMode==="register"?"注册":"登录";
+    }
+  }
 }
+
+
+document.getElementById("formalPassword")?.addEventListener("keydown",event=>{
+  if(event.key==="Enter")submitFormalAuth();
+});
+document.getElementById("formalEmailCode")?.addEventListener("keydown",event=>{
+  if(event.key==="Enter")submitFormalAuth();
+});
 
 function getFormalUser(){
   try{return JSON.parse(localStorage.getItem(FORMAL_USER_KEY)||"null")}catch{return null}
@@ -2325,7 +2498,7 @@ async function generateCharacterReference(project,c,button){button.disabled=true
 async function generateAllCharacterReferences(project,button){const list=(project.characters||[]).filter(c=>!c.referenceImage);if(!list.length)return alert("全部角色已经有定妆照。");if(!confirm(`将生成${list.length}张角色定妆照，每张都会产生一次图片费用，是否继续？`))return;button.disabled=true;try{for(let i=0;i<list.length;i++){button.textContent=`正在生成${i+1}/${list.length}`;await generateCharacterReference(project,list[i],{disabled:false})}}finally{button.disabled=false;button.textContent="一键生成全部定妆照"}}
 function renderDramaProject(project){const root=document.createElement("div");root.className="drama-project";const summary=document.createElement("div");summary.className="drama-summary";summary.innerHTML=`<div class="drama-project-title">${escapeHtml(project.title)}</div><div>${escapeHtml(project.synopsis)}</div><div style="margin-top:8px;font-size:12px;color:#777">${escapeHtml(project.style)} · ${escapeHtml((project.videoResolution||"720p").toUpperCase())} · ${escapeHtml(project.videoRatio||"9:16")} · ${project.videoFps||24} FPS · 已生成${project.episodes.length}/${project.totalEpisodes||project.episodes.length}集 · 每镜头≤15秒</div>`;root.appendChild(summary);root.appendChild(renderDramaCharacters(project));project.episodes.forEach((ep,ei)=>{const card=document.createElement("div");card.className="drama-episode";const head=document.createElement("div");head.className="drama-episode-head";head.innerHTML=`<div class="drama-episode-name">第${ep.number||ei+1}集：${escapeHtml(ep.title)}</div><div class="drama-hook">${escapeHtml(ep.summary)}${ep.hook?`<br>悬念：${escapeHtml(ep.hook)}`:""}</div>`;card.appendChild(head);const scenes=document.createElement("div");scenes.className="drama-scenes";ep.scenes.forEach((sc,si)=>{const item=document.createElement("div");item.className="drama-scene";const d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("\n");item.innerHTML=`<div class="drama-scene-top"><span class="drama-scene-num">镜头${sc.number||si+1}</span><span class="drama-duration">${sc.duration}秒</span></div><div class="drama-scene-prompt">${escapeHtml(sc.prompt)}</div>${Array.isArray(sc.characterIds)&&sc.characterIds.length?`<div class="drama-scene-characters">角色：${escapeHtml(sc.characterIds.map(id=>`${getDramaCharacter(project,id)?.name||id}${String(id)===String(sc.mainCharacterId||sc.characterIds[0])?"（主）":""}`).join("、"))}</div>`:""}${d?`<div class="drama-dialogue">${escapeHtml(d)}</div>`:""}`;const a=document.createElement("div");a.className="drama-actions";const use=document.createElement("button");use.className="drama-btn";use.textContent="放入视频生成";use.onclick=()=>useDramaScene(sc,project);a.appendChild(use);item.appendChild(a);scenes.appendChild(item)});card.appendChild(scenes);const ea=document.createElement("div");ea.className="drama-actions";ea.style.padding="0 10px 12px";const all=document.createElement("button");all.className="drama-btn primary";all.textContent="一键提交本集全部镜头";all.onclick=()=>generateDramaEpisode(project,ep,all);ea.appendChild(all);card.appendChild(ea);root.appendChild(card)});return root;}
 function useDramaScene(sc,project){try{validateStrictSceneLock(project,sc)}catch(err){alert(err.message);return}const d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("；");input.value=`${buildLockedCharacterPrompt(project,sc)} ${sc.prompt}${d?`。${d}`:""}`.trim();const refs=getSceneCharacterReferences(project,sc);if(refs[0]){selectedImageBase64=refs[0].url;selectedImageName="角色定妆照";previewImg.src=refs[0].url;previewName.textContent="角色定妆照";preview.style.display="flex"}videoDuration.value=String(sc.duration);if(document.getElementById("videoFps"))document.getElementById("videoFps").value=String(document.getElementById("dramaVideoFps")?.value||24);forcedTaskMode="video";taskMode.value="video";updateModeUI();input.focus();input.dispatchEvent(new Event("input"));window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});}
-async function generateDramaEpisode(project,ep,button){if(!isMediaWorkerConfigured())return;const missing=(project.characters||[]).filter(c=>!c.referenceImage);if(missing.length&&!confirm(`还有${missing.length}个角色没有定妆照，继续生成可能导致人物变化。\n建议先生成全部定妆照。\n\n仍然继续吗？`))return;if(!confirm(`将提交第${ep.number}集的${ep.scenes.length}个镜头，每个镜头都会产生视频费用，是否继续？`))return;button.disabled=true;const c=getCurrent();try{for(let i=0;i<ep.scenes.length;i++){const sc=ep.scenes[i];validateStrictSceneLock(project,sc);const d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("；"),locked=buildLockedCharacterPrompt(project,sc),prompt=`短剧《${project.title}》第${ep.number}集镜头${sc.number}。${locked} ${sc.prompt}${d?`。${d}`:""}`.trim(),sceneReferences=await getSceneCharacterReferencesPublic(project,sc);const um={role:"user",content:`第${ep.number}集·镜头${sc.number}（${sc.duration}秒）\n${prompt}\n参考角色：${sceneReferences.length?sceneReferences.map(r=>r.name||r.characterId).join("、"):"无"}`,image:sceneReferences[0]?.url||null,images:sceneReferences.map(r=>r.url)};c.messages.push(um);addMessageToPage("user",um);const am={role:"assistant",content:"视频任务正在创建...",mediaType:"video",status:"creating",startedAt:Date.now(),statusText:"正在创建短剧镜头..."},idx=c.messages.length;c.messages.push(am);const {bubble}=addMessageToPage("assistant",am);appendVideoStatus(bubble,"creating",am.statusText);saveAll();try{const data=await postJson(MEDIA_WORKER_URL,{type:"create_video",modelKey:document.getElementById("videoModel")?.value||"seedance_20",prompt,resolution:project.videoResolution||document.getElementById("dramaVideoResolution")?.value||videoResolution?.value||"720p",ratio:project.videoRatio||document.getElementById("dramaVideoRatio")?.value||videoRatio?.value||"9:16",duration:Math.min(15,Math.max(4,Number(sc.duration)||10)),fps:Number(project.videoFps||document.getElementById("dramaVideoFps")?.value||24),generateAudio:project.generateAudio!==false,watermark:project.watermark===true,references:sceneReferences});if(!data.taskId)throw new Error(data.error||"没有返回任务ID");am.taskId=data.taskId;am.status=data.status||"queued";am.statusText="短剧镜头已提交，正在生成...";saveAll();appendVideoStatus(bubble,am.status,am.statusText);pollVideoTask(data.taskId,bubble,c,idx)}catch(err){am.status="failed";am.content="镜头生成失败："+err.message;am.statusText=am.content;appendVideoStatus(bubble,"failed",am.statusText);saveAll()}button.textContent=`已提交${i+1}/${ep.scenes.length}`;await new Promise(r=>setTimeout(r,450))}button.textContent="本集镜头已全部提交"}finally{setTimeout(()=>{button.disabled=false;button.textContent="一键提交本集全部镜头"},1800)}}
+async function generateDramaEpisode(project,ep,button){if(!isMediaWorkerConfigured())return;const missing=(project.characters||[]).filter(c=>!c.referenceImage);if(missing.length&&!confirm(`还有${missing.length}个角色没有定妆照，继续生成可能导致人物变化。\n建议先生成全部定妆照。\n\n仍然继续吗？`))return;const episodeEstimated=(ep.scenes||[]).reduce((sum,sc)=>sum+calculateClientVideoPrice({drama:true,duration:Math.min(15,Math.max(4,Number(sc.duration)||10)),resolution:project.videoResolution||document.getElementById("dramaVideoResolution")?.value||"720p",modelKey:document.getElementById("videoModel")?.value||"seedance_20",hasImage:true}),0);if(!await ensureBalanceForAmount(episodeEstimated,`生成第${ep.number}集短剧视频`))return;if(!confirm(`将提交第${ep.number}集的${ep.scenes.length}个镜头，预计扣费 ¥${episodeEstimated.toFixed(2)}，是否继续？`))return;button.disabled=true;const c=getCurrent();try{for(let i=0;i<ep.scenes.length;i++){const sc=ep.scenes[i];validateStrictSceneLock(project,sc);const d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("；"),locked=buildLockedCharacterPrompt(project,sc),prompt=`短剧《${project.title}》第${ep.number}集镜头${sc.number}。${locked} ${sc.prompt}${d?`。${d}`:""}`.trim(),sceneReferences=await getSceneCharacterReferencesPublic(project,sc);const um={role:"user",content:`第${ep.number}集·镜头${sc.number}（${sc.duration}秒）\n${prompt}\n参考角色：${sceneReferences.length?sceneReferences.map(r=>r.name||r.characterId).join("、"):"无"}`,image:sceneReferences[0]?.url||null,images:sceneReferences.map(r=>r.url)};c.messages.push(um);addMessageToPage("user",um);const am={role:"assistant",content:"视频任务正在创建...",mediaType:"video",status:"creating",startedAt:Date.now(),statusText:"正在创建短剧镜头..."},idx=c.messages.length;c.messages.push(am);const {bubble}=addMessageToPage("assistant",am);appendVideoStatus(bubble,"creating",am.statusText);saveAll();try{const data=await postJson(MEDIA_WORKER_URL,{type:"create_video",feature:"drama",modelKey:document.getElementById("videoModel")?.value||"seedance_20",prompt,resolution:project.videoResolution||document.getElementById("dramaVideoResolution")?.value||videoResolution?.value||"720p",ratio:project.videoRatio||document.getElementById("dramaVideoRatio")?.value||videoRatio?.value||"9:16",duration:Math.min(15,Math.max(4,Number(sc.duration)||10)),fps:Number(project.videoFps||document.getElementById("dramaVideoFps")?.value||24),generateAudio:project.generateAudio!==false,watermark:project.watermark===true,references:sceneReferences});if(!data.taskId)throw new Error(data.error||"没有返回任务ID");am.taskId=data.taskId;am.status=data.status||"queued";am.statusText=`短剧镜头已提交（扣费 ¥${Number(data.chargedAmount||0).toFixed(2)}），正在生成...`;refreshWalletAfterCharge();saveAll();appendVideoStatus(bubble,am.status,am.statusText);pollVideoTask(data.taskId,bubble,c,idx)}catch(err){am.status="failed";am.content="镜头生成失败："+err.message;am.statusText=am.content;appendVideoStatus(bubble,"failed",am.statusText);saveAll()}button.textContent=`已提交${i+1}/${ep.scenes.length}`;await new Promise(r=>setTimeout(r,450))}button.textContent="本集镜头已全部提交"}finally{setTimeout(()=>{button.disabled=false;button.textContent="一键提交本集全部镜头"},1800)}}
 
 function resetComposerAfterSubmit(){
   selectedVideoFiles=[];
@@ -2357,6 +2530,9 @@ async function generateImage(){
     return;
   }
   if(!isMediaWorkerConfigured())return;
+  if(!pricingConfig)await loadPricingConfig();
+  const estimatedImagePrice=calculateClientImagePrice();
+  if(!await ensureBalanceForAmount(estimatedImagePrice,"生成图片"))return;
 
   setSubmitting(true);
   const c=getCurrent();
@@ -2403,8 +2579,9 @@ async function generateImage(){
     img.onclick=()=>openMediaViewer(data.image,"image","jerry-ai-image.png");
     bubble.appendChild(img);
 
-    aiMessage.content="图片生成完成：";
+    aiMessage.content=`图片生成完成（扣费 ¥${Number(data.chargedAmount||estimatedImagePrice).toFixed(2)}）：`;
     aiMessage.image=data.image;
+    refreshWalletAfterCharge();
     c.messages.push(aiMessage);
     saveAll();
     renderMessages();
@@ -2426,6 +2603,9 @@ async function generateVideo(){
     return;
   }
   if(!isMediaWorkerConfigured())return;
+  if(!pricingConfig)await loadPricingConfig();
+  const estimatedVideoPrice=calculateClientVideoPrice();
+  if(!await ensureBalanceForAmount(estimatedVideoPrice,"生成视频"))return;
 
   const localFiles=[...selectedVideoFiles];
   let urlReferences=[];
@@ -2535,7 +2715,8 @@ async function generateVideo(){
     if(!data.taskId)throw new Error(data.error || "接口没有返回视频任务 ID");
     aiMessage.taskId=data.taskId;
     aiMessage.status=data.status || "queued";
-    aiMessage.content="视频任务已提交。";
+    aiMessage.content=`视频任务已提交（扣费 ¥${Number(data.chargedAmount||estimatedVideoPrice).toFixed(2)}）。`;
+    refreshWalletAfterCharge();
     aiMessage.statusText=`任务已提交，包含 ${data.referenceCount ?? references.length} 个参考素材，正在排队或生成中...`;
     saveAll();
     appendVideoStatus(bubble,aiMessage.status,aiMessage.statusText);
@@ -3014,6 +3195,17 @@ function toggleSidebar(force){
   const sidebar=document.getElementById("sidebar");
   if(typeof force==="boolean")sidebar.classList.toggle("show",force);
   else sidebar.classList.toggle("show");
+}
+
+// ===== 最终初始化：此时所有 const / let / function 已完成定义 =====
+try{
+  refreshFormalAccount();
+  checkFormalLoginStatus();
+  if(getFormalToken()){
+    loadPricingConfig().catch(error=>console.warn("价格加载失败：",error));
+  }
+}catch(error){
+  console.error("Jerry AI 初始化失败：",error);
 }
 </script>
 </body>
