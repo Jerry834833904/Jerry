@@ -577,6 +577,19 @@ if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 updateChatModelUI();
 updateModeUI();
 refreshFormalAccount();
+(async()=>{
+  if(getFormalToken()){
+    try{
+      const data=await formalApi("/api/me",{method:"GET"});
+      if(data.user){
+        localStorage.setItem(FORMAL_USER_KEY,JSON.stringify(data.user));
+        refreshFormalAccount();
+      }
+    }catch(err){
+      console.warn("登录状态校验失败：",err.message);
+    }
+  }
+})();
 renderChatList();
 renderMessages();
 
@@ -735,6 +748,7 @@ function safeParse(value,fallback){
 }
 
 function setTaskMode(mode){
+  if(["image","video","drama"].includes(mode)&&!requireFormalLoginForFeature(mode==="image"?"图片生成":mode==="video"?"视频生成":"AI短剧"))return;
   taskMode.value=mode;
   updateModeUI();
   input.focus();
@@ -1045,12 +1059,38 @@ function switchFormalAuth(mode){
   formalAuthSubmit.textContent=mode==="register"?"注册":"登录";
 }
 
-async function formalApi(path,options={}){
-  const token=localStorage.getItem(FORMAL_TOKEN_KEY);
-  const headers=Object.assign({"Content-Type":"application/json"},options.headers||{});
+
+function getFormalToken(){
+  return localStorage.getItem(FORMAL_TOKEN_KEY)||"";
+}
+function buildFormalHeaders(extraHeaders={},includeJson=true){
+  const headers={...(extraHeaders||{})};
+  if(includeJson&&!headers["Content-Type"])headers["Content-Type"]="application/json";
+  const token=getFormalToken();
   if(token)headers.Authorization=`Bearer ${token}`;
+  return headers;
+}
+function requireFormalLoginForFeature(featureName="此功能"){
+  if(getFormalToken()&&getFormalUser())return true;
+  alert(`${featureName}需要先登录`);
+  openFormalPage("account");
+  return false;
+}
+async function handleFormalUnauthorized(response,data){
+  if(response.status!==401)return false;
+  localStorage.removeItem(FORMAL_TOKEN_KEY);
+  localStorage.removeItem(FORMAL_USER_KEY);
+  refreshFormalAccount();
+  alert(data?.error||"登录已过期，请重新登录");
+  openFormalPage("account");
+  return true;
+}
+
+async function formalApi(path,options={}){
+  const headers=buildFormalHeaders(options.headers||{},true);
   const response=await fetch(FORMAL_API+path,Object.assign({},options,{headers}));
   const data=await response.json().catch(()=>({ok:false,error:`HTTP ${response.status}`}));
+  if(await handleFormalUnauthorized(response,data))throw new Error(data.error||"请先登录");
   if(!response.ok||data.ok===false)throw new Error(data.error||`请求失败 HTTP ${response.status}`);
   return data;
 }
@@ -1549,6 +1589,7 @@ function getDramaEpisodeCount(){const s=document.getElementById("dramaEpisodeCou
 function setDramaProgress(message){const el=document.getElementById("dramaProgress");if(!el)return;el.style.display=message?"block":"none";el.textContent=message||""}
 function mergeDramaEpisodes(target,incoming){const map=new Map((target.episodes||[]).map(ep=>[Number(ep.number),ep]));for(const ep of incoming||[])map.set(Number(ep.number),ep);target.episodes=[...map.values()].sort((a,b)=>Number(a.number)-Number(b.number));return target}
 function openDramaPanel(){
+  if(!requireFormalLoginForFeature("AI短剧"))return;
   const idea=document.getElementById("dramaIdea");
   if(idea && !idea.value.trim() && input.value.trim())idea.value=input.value.trim();
   document.getElementById("dramaMask")?.classList.add("show");
@@ -1673,10 +1714,12 @@ function dataUrlToFile(dataUrl,filename="character.jpg"){
 }
 
 async function uploadCharacterImageFile(file){
+  if(!requireFormalLoginForFeature("上传角色照片"))throw new Error("请先登录");
   const form=new FormData();
   form.append("file",file,file.name||"character.jpg");
   const response=await fetch(MEDIA_WORKER_URL.replace(/\/+$/,"")+"/upload",{
     method:"POST",
+    headers:buildFormalHeaders({},false),
     body:form
   });
   let data={};
@@ -2211,10 +2254,11 @@ function countReferences(files,references){
 }
 
 async function uploadReferenceFile(file){
+  if(!requireFormalLoginForFeature("上传图片或视频素材"))throw new Error("请先登录");
   const form=new FormData();
   form.append("file",file,file.name);
   const url=MEDIA_WORKER_URL.replace(/\/+$/,"")+"/upload";
-  const res=await fetch(url,{method:"POST",body:form});
+  const res=await fetch(url,{method:"POST",headers:buildFormalHeaders({},false),body:form});
   let data={};
   try{data=await res.json()}catch{throw new Error(`上传接口返回了非 JSON 内容，HTTP ${res.status}`)}
   if(!res.ok || data.ok===false)throw new Error(data.error || `素材上传失败，HTTP ${res.status}`);
@@ -2295,14 +2339,22 @@ function videoStatusText(status,error,elapsedSeconds){
 }
 
 async function postJson(url,payload){
+  const isProtectedMedia=["generate_image","generate_video","video_status","drama_outline","drama_batch","chat_image"].includes(String(payload?.type||""));
+  if(isProtectedMedia&&!requireFormalLoginForFeature(
+    payload?.type==="generate_image"?"图片生成":
+    payload?.type==="generate_video"||payload?.type==="video_status"?"视频生成":
+    payload?.type==="drama_outline"||payload?.type==="drama_batch"?"AI短剧":"图片识别"
+  ))throw new Error("请先登录");
+
   const res=await fetch(url,{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers:buildFormalHeaders({},true),
     body:JSON.stringify(payload)
   });
 
   let data={};
   try{data=await res.json()}catch{throw new Error(`服务器返回了非 JSON 内容，HTTP ${res.status}`)}
+  if(await handleFormalUnauthorized(res,data))throw new Error(data.error||"请先登录");
   if(!res.ok || data.ok===false)throw new Error(data.error || data.message || `请求失败，HTTP ${res.status}`);
   return data;
 }
