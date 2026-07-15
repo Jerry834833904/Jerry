@@ -1278,6 +1278,46 @@ async function loadFormalChatHistory(){
   }
 }
 
+
+let chatHistorySyncRunning=false;
+
+async function syncLocalChatHistoryToAccount(){
+  if(chatHistorySyncRunning||!getFormalToken())return;
+  chatHistorySyncRunning=true;
+  try{
+    const items=[];
+    const list=Array.isArray(conversations)?conversations:[];
+
+    for(const conv of list){
+      const messages=Array.isArray(conv.messages)?conv.messages:[];
+      messages.forEach((msg,index)=>{
+        if(!msg||!["user","assistant"].includes(msg.role)||!String(msg.content||"").trim())return;
+        items.push({
+          sourceKey:`${conv.id||"conversation"}:${index}:${msg.role}`,
+          conversationId:String(conv.id||""),
+          role:msg.role,
+          content:String(msg.content||""),
+          model:String(msg.model||currentChatModel||""),
+          createdAt:String(msg.createdAt||conv.createdAt||new Date().toISOString())
+        });
+      });
+    }
+
+    if(!items.length)return;
+
+    for(let i=0;i<items.length;i+=200){
+      await formalApi("/api/chat-history/import",{
+        method:"POST",
+        body:JSON.stringify({items:items.slice(i,i+200)})
+      });
+    }
+  }catch(error){
+    console.warn("同步历史聊天记录失败：",error);
+  }finally{
+    chatHistorySyncRunning=false;
+  }
+}
+
 async function checkFormalLoginStatus(){
   const token=getFormalToken();
   if(!token){
