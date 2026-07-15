@@ -232,11 +232,14 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
             <span id="chatModelLabel">GPT6.0</span><span class="model-switch-arrow">⌄</span>
           </button>
           <div id="chatModelMenu" class="model-menu" role="menu">
-            <button type="button" class="model-menu-item active" data-chat-model="gpt6" onclick="selectChatModel('gpt6')">
+            <button type="button" class="model-menu-item active" data-chat-model="seed21_turbo" onclick="selectChatModel('seed21_turbo')">
               <span>GPT6.0</span><span class="model-check">✓</span>
             </button>
             <button type="button" class="model-menu-item" data-chat-model="doubao" onclick="selectChatModel('doubao')">
               <span>Doubao Pro</span><span class="model-check"></span>
+            </button>
+            <button type="button" class="model-menu-item" data-chat-model="deepseek" onclick="selectChatModel('deepseek')">
+              <span>DeepSeek</span><span class="model-check"></span>
             </button>
           </div>
         </div>
@@ -307,6 +310,11 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 
         <div id="videoSettings" class="setting-group">
           <span class="setting-label">视频设置</span>
+          <select id="videoModel" class="small-select" title="视频模型" onchange="applyVideoModelLimits()">
+            <option value="seedance_20" selected>Seedance 2.0 标准版</option>
+            <option value="seedance_20_fast">Seedance 2.0 Fast</option>
+            <option value="seedance_20_mini">Seedance 2.0 Mini</option>
+          </select>
           <select id="videoResolution" class="small-select" title="视频质量">
             <option value="480p">流畅 480P</option>
             <option value="720p" selected>高清 720P</option>
@@ -518,7 +526,9 @@ const MODEL_OPTIONS = {
     {value:"seedream_40", label:"Seedream 4.0"}
   ],
   video: [
-    {value:"seedance_20", label:"Seedance 2.0"}
+    {value:"seedance_20", label:"Seedance 2.0 标准版"},
+    {value:"seedance_20_fast", label:"Seedance 2.0 Fast"},
+    {value:"seedance_20_mini", label:"Seedance 2.0 Mini"}
   ]
 };
 
@@ -566,7 +576,7 @@ let recognition = null;
 let voiceResult = "";
 let isSubmitting = false;
 let forcedTaskMode = null;
-let currentChatModel = localStorage.getItem("jerry_chat_model") || "gpt6";
+let currentChatModel = localStorage.getItem("jerry_chat_model") || "seed21_turbo";
 const activeVideoPolls = new Set();
 let selectedMenuMessage=null;
 let messageLongPressTimer=null;
@@ -576,6 +586,7 @@ const selectedMessages=new Set();
 if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 
 updateChatModelUI();
+applyVideoModelLimits();
 updateModeUI();
 refreshFormalAccount();
 checkFormalLoginStatus();
@@ -705,7 +716,7 @@ function toggleChatModelMenu(event){
 }
 
 function selectChatModel(model){
-  if(!["gpt6","doubao"].includes(model))return;
+  if(!["seed21_turbo","doubao","deepseek"].includes(model))return;
   currentChatModel=model;
   localStorage.setItem("jerry_chat_model",model);
   updateChatModelUI();
@@ -714,8 +725,30 @@ function selectChatModel(model){
   input.focus();
 }
 
+function applyVideoModelLimits(){
+  const model=document.getElementById("videoModel")?.value||"seedance_20";
+  const resolution=document.getElementById("videoResolution");
+  const fps=document.getElementById("videoFps");
+  const limited=model==="seedance_20_fast"||model==="seedance_20_mini";
+  if(resolution){
+    [...resolution.options].forEach(opt=>{
+      opt.disabled=limited && !["480p","720p"].includes(opt.value);
+    });
+    if(limited&&!["480p","720p"].includes(resolution.value))resolution.value="720p";
+  }
+  if(fps){
+    fps.value="24";
+    [...fps.options].forEach(opt=>opt.disabled=opt.value!=="24");
+  }
+}
+
 function updateChatModelUI(){
-  const label=currentChatModel==="doubao"?"Doubao Pro":"GPT6.0";
+  const labels={
+    seed21_turbo:"GPT6.0",
+    doubao:"Doubao Pro",
+    deepseek:"DeepSeek"
+  };
+  const label=labels[currentChatModel]||"GPT6.0";
   chatModelLabel.textContent=label;
   document.querySelectorAll("[data-chat-model]").forEach(item=>{
     const active=item.dataset.chatModel===currentChatModel;
@@ -1655,7 +1688,11 @@ async function sendMessage(){
   renderChatList();
 
   const mode="auto";
-  const thinkingText=currentChatModel==="doubao"?"Doubao Pro 正在思考...":"正在思考...";
+  const thinkingText=currentChatModel==="doubao"
+    ?"Doubao Pro 正在思考..."
+    :currentChatModel==="deepseek"
+      ?"DeepSeek 正在思考..."
+      :"GPT6.0 正在思考...";
 
   const aiMessage={role:"assistant",content:thinkingText};
   const {bubble:aiBubble}=addMessageToPage("assistant",aiMessage);
@@ -2119,7 +2156,7 @@ async function generateCharacterReference(project,c,button){button.disabled=true
 async function generateAllCharacterReferences(project,button){const list=(project.characters||[]).filter(c=>!c.referenceImage);if(!list.length)return alert("全部角色已经有定妆照。");if(!confirm(`将生成${list.length}张角色定妆照，每张都会产生一次图片费用，是否继续？`))return;button.disabled=true;try{for(let i=0;i<list.length;i++){button.textContent=`正在生成${i+1}/${list.length}`;await generateCharacterReference(project,list[i],{disabled:false})}}finally{button.disabled=false;button.textContent="一键生成全部定妆照"}}
 function renderDramaProject(project){const root=document.createElement("div");root.className="drama-project";const summary=document.createElement("div");summary.className="drama-summary";summary.innerHTML=`<div class="drama-project-title">${escapeHtml(project.title)}</div><div>${escapeHtml(project.synopsis)}</div><div style="margin-top:8px;font-size:12px;color:#777">${escapeHtml(project.style)} · ${escapeHtml((project.videoResolution||"720p").toUpperCase())} · ${escapeHtml(project.videoRatio||"9:16")} · ${project.videoFps||24} FPS · 已生成${project.episodes.length}/${project.totalEpisodes||project.episodes.length}集 · 每镜头≤15秒</div>`;root.appendChild(summary);root.appendChild(renderDramaCharacters(project));project.episodes.forEach((ep,ei)=>{const card=document.createElement("div");card.className="drama-episode";const head=document.createElement("div");head.className="drama-episode-head";head.innerHTML=`<div class="drama-episode-name">第${ep.number||ei+1}集：${escapeHtml(ep.title)}</div><div class="drama-hook">${escapeHtml(ep.summary)}${ep.hook?`<br>悬念：${escapeHtml(ep.hook)}`:""}</div>`;card.appendChild(head);const scenes=document.createElement("div");scenes.className="drama-scenes";ep.scenes.forEach((sc,si)=>{const item=document.createElement("div");item.className="drama-scene";const d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("\n");item.innerHTML=`<div class="drama-scene-top"><span class="drama-scene-num">镜头${sc.number||si+1}</span><span class="drama-duration">${sc.duration}秒</span></div><div class="drama-scene-prompt">${escapeHtml(sc.prompt)}</div>${Array.isArray(sc.characterIds)&&sc.characterIds.length?`<div class="drama-scene-characters">角色：${escapeHtml(sc.characterIds.map(id=>`${getDramaCharacter(project,id)?.name||id}${String(id)===String(sc.mainCharacterId||sc.characterIds[0])?"（主）":""}`).join("、"))}</div>`:""}${d?`<div class="drama-dialogue">${escapeHtml(d)}</div>`:""}`;const a=document.createElement("div");a.className="drama-actions";const use=document.createElement("button");use.className="drama-btn";use.textContent="放入视频生成";use.onclick=()=>useDramaScene(sc,project);a.appendChild(use);item.appendChild(a);scenes.appendChild(item)});card.appendChild(scenes);const ea=document.createElement("div");ea.className="drama-actions";ea.style.padding="0 10px 12px";const all=document.createElement("button");all.className="drama-btn primary";all.textContent="一键提交本集全部镜头";all.onclick=()=>generateDramaEpisode(project,ep,all);ea.appendChild(all);card.appendChild(ea);root.appendChild(card)});return root;}
 function useDramaScene(sc,project){try{validateStrictSceneLock(project,sc)}catch(err){alert(err.message);return}const d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("；");input.value=`${buildLockedCharacterPrompt(project,sc)} ${sc.prompt}${d?`。${d}`:""}`.trim();const refs=getSceneCharacterReferences(project,sc);if(refs[0]){selectedImageBase64=refs[0].url;selectedImageName="角色定妆照";previewImg.src=refs[0].url;previewName.textContent="角色定妆照";preview.style.display="flex"}videoDuration.value=String(sc.duration);if(document.getElementById("videoFps"))document.getElementById("videoFps").value=String(document.getElementById("dramaVideoFps")?.value||24);forcedTaskMode="video";taskMode.value="video";updateModeUI();input.focus();input.dispatchEvent(new Event("input"));window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});}
-async function generateDramaEpisode(project,ep,button){if(!isMediaWorkerConfigured())return;const missing=(project.characters||[]).filter(c=>!c.referenceImage);if(missing.length&&!confirm(`还有${missing.length}个角色没有定妆照，继续生成可能导致人物变化。\n建议先生成全部定妆照。\n\n仍然继续吗？`))return;if(!confirm(`将提交第${ep.number}集的${ep.scenes.length}个镜头，每个镜头都会产生视频费用，是否继续？`))return;button.disabled=true;const c=getCurrent();try{for(let i=0;i<ep.scenes.length;i++){const sc=ep.scenes[i];validateStrictSceneLock(project,sc);const d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("；"),locked=buildLockedCharacterPrompt(project,sc),prompt=`短剧《${project.title}》第${ep.number}集镜头${sc.number}。${locked} ${sc.prompt}${d?`。${d}`:""}`.trim(),sceneReferences=await getSceneCharacterReferencesPublic(project,sc);const um={role:"user",content:`第${ep.number}集·镜头${sc.number}（${sc.duration}秒）\n${prompt}\n参考角色：${sceneReferences.length?sceneReferences.map(r=>r.name||r.characterId).join("、"):"无"}`,image:sceneReferences[0]?.url||null,images:sceneReferences.map(r=>r.url)};c.messages.push(um);addMessageToPage("user",um);const am={role:"assistant",content:"视频任务正在创建...",mediaType:"video",status:"creating",startedAt:Date.now(),statusText:"正在创建短剧镜头..."},idx=c.messages.length;c.messages.push(am);const {bubble}=addMessageToPage("assistant",am);appendVideoStatus(bubble,"creating",am.statusText);saveAll();try{const data=await postJson(MEDIA_WORKER_URL,{type:"create_video",modelKey:"seedance_20",prompt,resolution:project.videoResolution||document.getElementById("dramaVideoResolution")?.value||videoResolution?.value||"720p",ratio:project.videoRatio||document.getElementById("dramaVideoRatio")?.value||videoRatio?.value||"9:16",duration:Math.min(15,Math.max(4,Number(sc.duration)||10)),fps:Number(project.videoFps||document.getElementById("dramaVideoFps")?.value||24),generateAudio:project.generateAudio!==false,watermark:project.watermark===true,references:sceneReferences});if(!data.taskId)throw new Error(data.error||"没有返回任务ID");am.taskId=data.taskId;am.status=data.status||"queued";am.statusText="短剧镜头已提交，正在生成...";saveAll();appendVideoStatus(bubble,am.status,am.statusText);pollVideoTask(data.taskId,bubble,c,idx)}catch(err){am.status="failed";am.content="镜头生成失败："+err.message;am.statusText=am.content;appendVideoStatus(bubble,"failed",am.statusText);saveAll()}button.textContent=`已提交${i+1}/${ep.scenes.length}`;await new Promise(r=>setTimeout(r,450))}button.textContent="本集镜头已全部提交"}finally{setTimeout(()=>{button.disabled=false;button.textContent="一键提交本集全部镜头"},1800)}}
+async function generateDramaEpisode(project,ep,button){if(!isMediaWorkerConfigured())return;const missing=(project.characters||[]).filter(c=>!c.referenceImage);if(missing.length&&!confirm(`还有${missing.length}个角色没有定妆照，继续生成可能导致人物变化。\n建议先生成全部定妆照。\n\n仍然继续吗？`))return;if(!confirm(`将提交第${ep.number}集的${ep.scenes.length}个镜头，每个镜头都会产生视频费用，是否继续？`))return;button.disabled=true;const c=getCurrent();try{for(let i=0;i<ep.scenes.length;i++){const sc=ep.scenes[i];validateStrictSceneLock(project,sc);const d=[sc.narration?`旁白：${sc.narration}`:"",sc.dialogue?`对白：${sc.dialogue}`:""].filter(Boolean).join("；"),locked=buildLockedCharacterPrompt(project,sc),prompt=`短剧《${project.title}》第${ep.number}集镜头${sc.number}。${locked} ${sc.prompt}${d?`。${d}`:""}`.trim(),sceneReferences=await getSceneCharacterReferencesPublic(project,sc);const um={role:"user",content:`第${ep.number}集·镜头${sc.number}（${sc.duration}秒）\n${prompt}\n参考角色：${sceneReferences.length?sceneReferences.map(r=>r.name||r.characterId).join("、"):"无"}`,image:sceneReferences[0]?.url||null,images:sceneReferences.map(r=>r.url)};c.messages.push(um);addMessageToPage("user",um);const am={role:"assistant",content:"视频任务正在创建...",mediaType:"video",status:"creating",startedAt:Date.now(),statusText:"正在创建短剧镜头..."},idx=c.messages.length;c.messages.push(am);const {bubble}=addMessageToPage("assistant",am);appendVideoStatus(bubble,"creating",am.statusText);saveAll();try{const data=await postJson(MEDIA_WORKER_URL,{type:"create_video",modelKey:document.getElementById("videoModel")?.value||"seedance_20",prompt,resolution:project.videoResolution||document.getElementById("dramaVideoResolution")?.value||videoResolution?.value||"720p",ratio:project.videoRatio||document.getElementById("dramaVideoRatio")?.value||videoRatio?.value||"9:16",duration:Math.min(15,Math.max(4,Number(sc.duration)||10)),fps:Number(project.videoFps||document.getElementById("dramaVideoFps")?.value||24),generateAudio:project.generateAudio!==false,watermark:project.watermark===true,references:sceneReferences});if(!data.taskId)throw new Error(data.error||"没有返回任务ID");am.taskId=data.taskId;am.status=data.status||"queued";am.statusText="短剧镜头已提交，正在生成...";saveAll();appendVideoStatus(bubble,am.status,am.statusText);pollVideoTask(data.taskId,bubble,c,idx)}catch(err){am.status="failed";am.content="镜头生成失败："+err.message;am.statusText=am.content;appendVideoStatus(bubble,"failed",am.statusText);saveAll()}button.textContent=`已提交${i+1}/${ep.scenes.length}`;await new Promise(r=>setTimeout(r,450))}button.textContent="本集镜头已全部提交"}finally{setTimeout(()=>{button.disabled=false;button.textContent="一键提交本集全部镜头"},1800)}}
 
 function resetComposerAfterSubmit(){
   selectedVideoFiles=[];
@@ -2315,7 +2352,7 @@ async function generateVideo(){
 
     const data=await postJson(MEDIA_WORKER_URL,{
       type:"create_video",
-      modelKey:"seedance_20",
+      modelKey:document.getElementById("videoModel")?.value || "seedance_20",
       prompt,
       references,
       resolution:document.getElementById("videoResolution").value,
