@@ -1822,6 +1822,12 @@ function setSubmitting(value){
 }
 
 async function sendMessage(){
+  if(!getFormalToken()){
+    alert("请先登录后再使用聊天功能");
+    openFormalPage("account");
+    return;
+  }
+
   const text=input.value.trim();
   const image=selectedImageBase64;
   if(!text && !image)return;
@@ -1833,7 +1839,9 @@ async function sendMessage(){
   const userMessage={role:"user",content:text || "帮我看看这张图片",image:image || null};
   c.messages.push(userMessage);
   addMessageToPage("user",userMessage);
-  saveChatRecordToAccount("user",userMessage.content,currentChatModel,c.id||"");
+
+  // 先保存用户发送的内容，再请求 AI，确保管理员后台能看到用户消息
+  await saveChatRecordToAccount("user",userMessage.content,currentChatModel,c.id||"");
 
   input.value="";
   input.style.height="auto";
@@ -1874,12 +1882,18 @@ async function sendMessage(){
     await typeWriter(aiBubble,reply);
     aiMessage.content=reply;
     c.messages.push(aiMessage);
-    saveChatRecordToAccount("assistant",reply,data.model||currentChatModel,c.id||"");
+
+    // AI 回复也保存到同一登录邮箱下
+    await saveChatRecordToAccount("assistant",reply,data.model||currentChatModel,c.id||"");
     saveAll();
 
     if(document.getElementById("autoSpeak").checked)speakText(reply);
   }catch(err){
-    renderMarkdown(aiBubble,"连接失败："+escapeMarkdown(err.message));
+    const message=String(err?.message||"未知错误");
+    renderMarkdown(aiBubble,"连接失败："+escapeMarkdown(message));
+    if(message.includes("请先登录")||message.includes("已退出")||message.includes("登录")){
+      openFormalPage("account");
+    }
   }finally{
     setSubmitting(false);
   }
